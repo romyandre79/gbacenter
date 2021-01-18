@@ -63,7 +63,7 @@ class GroupaccessController extends AdminController {
 				),
 			),
 		));
-    $groupaccessid = filterinput(1, 'groupaccessid',FILTER_SANITIZE_NUMBER_INT);
+    $groupaccessid = filterinput(2, 'groupaccessid',FILTER_SANITIZE_NUMBER_INT);
     if ($groupaccessid > 0) {
       $this->sqlcountgroupmenu .= ' where a0.groupaccessid = '.$groupaccessid;
       $this->sqldatagroupmenu	 .= ' where a0.groupaccessid = '.$groupaccessid;

@@ -4,18 +4,19 @@ class DivisiController extends AdminController {
 	public $module						 = 'gbacenter';
 	protected $pageTitle			 = 'Divisi';
 	public $wfname						 = '';
-	public $sqldata						 = "select a0.divisiid,a0.kodedivisi,a0.namadivisi,a0.parentid, a0.notes,a0.recordstatus,
-	b0.divisiid  iddivisidetail, b0.pesertaid, b0.jabatanid, 
-	c0.kodejabatan,c0.namajabatan,c0.jobdesk,c0.istelegram,
-	d0.idtelegram,d0.nohp,d0.nama,d0.aliasid, d0.asalgereja, d0.jabatangereja, d0.sexid, d0.foto
-	from divisi a0 
-	join divisidetail b0 on b0.divisiid = a0.divisiid
-	LEFT JOIN jabatan c0 ON c0.jabatanid = b0.jabatanid
-	LEFT JOIN peserta d0 ON d0.pesertaid = b0.pesertaid
+	public $sqldata						 = "select a0.divisiid,a0.kodedivisi,a0.namadivisi, a0.parentid, a0.notes,a0.recordstatus,a1.kodedivisi as parentdivisi, 
+	b0.namateam
+  from divisi a0 
+  left join divisi a1 on a1.divisiid = a0.parentid
+  left join team b0 on b0.teamid = a0.teamid
   ";
     //peserta
-	public $sqldatagroupmenu	 = "select a0.pesertaid, a0.idtelegram,a0.nohp,a0.nama,a0.aliasid, a0.asalgereja, a0.jabatangereja, a0.sexid, a0.foto
-    from peserta a0 
+	public $sqldatagroupmenu	 = "select a0.divisidetailid, a0.divisiid, a0.pesertaid, a0.jabatanid,
+	b0.idtelegram, b0.nohp, b0.nama, b0.aliasid, 
+	c0.namajabatan, c0.kodejabatan, c0.jobdesk
+	from divisidetail a0 
+	left join peserta b0 on b0.pesertaid = a0.pesertaid
+	left join jabatan c0 on c0.jabatanid = a0.jabatanid
   ";
     //jabatan
 	public $sqldatauserdash		 = "select a0.jabatanid,a0.kodejabatan,a0.namajabatan,a0.jobdesk,a0.istelegram
@@ -23,13 +24,14 @@ class DivisiController extends AdminController {
   ";
 	public $sqlcount					 = "select count(1) 
 	from divisi a0 
-	join divisidetail b0 on b0.divisiid = a0.divisiid
-	LEFT JOIN jabatan c0 ON c0.jabatanid = b0.jabatanid
-	LEFT JOIN peserta d0 ON d0.pesertaid = b0.pesertaid
+	left join divisi a1 on a1.divisiid = a0.parentid
+	left join team b0 on b0.teamid = a0.teamid
   ";
     //count data peserta
 	public $sqlcountgroupmenu	 = "select count(1) 
-    from peserta a0 
+    from divisidetail a0 
+	left join peserta b0 on b0.pesertaid = a0.pesertaid
+	left join jabatan c0 on c0.jabatanid = a0.jabatanid
   ";
     //count data jabatan
 	public $sqlcountuserdash	 = "select count(1) 
@@ -41,8 +43,12 @@ class DivisiController extends AdminController {
 		$divisiid = filterinput(2, 'divisiid');
 		$kodedivisi		 = filterinput(2, 'kodedivisi');
 		$namadivisi	 = filterinput(2, 'namadivisi');
+		$namateam	 = filterinput(2, 'namateam');
 		$where				 .= " where a0.kodedivisi like '%".$kodedivisi."%' 
 			and a0.namadivisi like '%".$namadivisi."%'";
+		if ($namateam !== '') {	
+			$where .= " and b0.namateam like '%".$namateam."%'";
+		}
 		if (($divisiid !== '0') && ($divisiid !== '')) {
 			$where .= " and a0.divisiid in (".$divisiid.")";
 		}
@@ -62,61 +68,38 @@ class DivisiController extends AdminController {
 			),
 			'sort' => array(
 				'attributes' => array(
-					'divisiid', 'kodedivisi', 'namadivisi', 'recordstatus'
+					'divisiid', 'kodedivisi', 'namadivisi', 'parentid','namateam','notes','recordstatus'
 				),
 				'defaultOrder' => array(
 					'divisiid' => CSort::SORT_DESC
 				),
 			),
-		));
-    $divisiid = filterinput(1, 'divisiid',FILTER_SANITIZE_NUMBER_INT);
-    if ($divisiid > 0) {
+    ));
+    if (isset($_REQUEST['divisiid'])) {
+      $divisiid = $_REQUEST['divisiid'];
       $this->sqlcountgroupmenu .= ' where a0.divisiid = '.$divisiid;
       $this->sqldatagroupmenu	 .= ' where a0.divisiid = '.$divisiid;
+      $countgroupmenu				 = Yii::app()->db->createCommand($this->sqlcountgroupmenu)->queryScalar();
     }
-		$countgroupmenu				 = Yii::app()->db->createCommand($this->sqlcountgroupmenu)->queryScalar();
 		$dataProvidergroupmenu = new CSqlDataProvider($this->sqldatagroupmenu,
 			array(
 			'totalItemCount' => $countgroupmenu,
-			'keyField' => 'pesertaid',
+			'keyField' => 'divisidetailid',
 			'pagination' => array(
 				'pageSize' => getparameter('DefaultPageSize'),
 				'pageVar' => 'page',
 			),
 			'sort' => array(
         'attributes' => array(
-					'pesertaid'
+					'divisidetailid','divisiid','nama','aliasid','namajabatan','jobdesk'
 				),
 				'defaultOrder' => array(
-					'pesertaid' => CSort::SORT_DESC
-				),
-			),
-		));
-		if ($divisiid > 0) {
-			$this->sqlcountuserdash	 .= ' where a0.divisiid = '.$divisiid;
-			$this->sqldatauserdash	 .= ' where a0.divisiid = '.$divisiid;
-		}
-		$countuserdash				 = Yii::app()->db->createCommand($this->sqlcountuserdash)->queryScalar();
-		$dataProvideruserdash	 = new CSqlDataProvider($this->sqldatauserdash,
-			array(
-			'totalItemCount' => $countuserdash,
-			'keyField' => 'jabatanid',
-			'pagination' => array(
-				'pageSize' => getparameter('DefaultPageSize'),
-				'pageVar' => 'page',
-			),
-			'sort' => array(
-         'attributes' => array(
-					'jabatanid', 'kodejabatan', 'namajabatan', 'jobdesk', 'istelegram'
-				),
-				'defaultOrder' => array(
-					'jabatanid' => CSort::SORT_DESC
+					'divisidetailid' => CSort::SORT_DESC
 				),
 			),
 		));
 		$this->render('index',
-			array('dataProvider' => $dataProvider, 'dataProvidergroupmenu' => $dataProvidergroupmenu,
-			'dataProvideruserdash' => $dataProvideruserdash));
+			array('dataProvider' => $dataProvider, 'dataProvidergroupmenu' => $dataProvidergroupmenu));
 	}
 	public function actionCreate() {
 		parent::actionCreate();
@@ -151,6 +134,11 @@ class DivisiController extends AdminController {
 				'divisiid' => $model['divisiid'],
 				'kodedivisi' => $model['kodedivisi'],
 				'namadivisi' => $model['namadivisi'],
+				'parentdivisi' => $model['parentdivisi'],
+				'parentid' => $model['parentid'],
+				'teamid' => $model['teamid'],
+				'namateam' => $model['namateam'],
+				'notes' => $model['notes'],
 				'recordstatus' => $model['recordstatus'],
 			));
 			Yii::app()->end();
@@ -162,19 +150,16 @@ class DivisiController extends AdminController {
 		if ($id == '') {
 			GetMessage('error', 'chooseone');
 		}
-		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where pesertaid = '.$id)->queryRow();
+		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where a0.divisidetailid = '.$id)->queryRow();
 		if ($model !== null) {
 			echo CJSON::encode(array(
 				'status' => 'success',
+				'divisidetailid' => $model['divisidetailid'],
+				'divisiid' => $model['divisiid'],
 				'pesertaid' => $model['pesertaid'],
-				'idtelegram' => $model['idtelegram'],
-				'nohp' => $model['menuaccessid'],
-				'nama' => $model['isread'],
-				'aliasid' => $model['iswrite'],
-				'asalgereja' => $model['ispost'],
-				'jabatangereja' => $model['isreject'],
-				'sexid' => $model['ispurge'],
-				'foto' => $model['isupload'],
+				'jabatanid' => $model['jabatanid'],
+				'namajabatan' => $model['namajabatan'],
+				'nama' => $model['nama']
 			));
 			Yii::app()->end();
 		}
@@ -208,39 +193,54 @@ class DivisiController extends AdminController {
 			ModifyCommand(1, $this->menuname, 'divisiid',
 				array(
 				array(':divisiid', 'divisiid', PDO::PARAM_STR),
+				array(':actiontype', 'actiontype', PDO::PARAM_STR),
 				array(':kodedivisi', 'kodedivisi', PDO::PARAM_STR),
 				array(':namadivisi', 'namadivisi', PDO::PARAM_STR),
 				array(':parentid', 'parentid', PDO::PARAM_STR),
+				array(':teamid', 'teamid', PDO::PARAM_STR),
 				array(':notes', 'notes', PDO::PARAM_STR),
 				array(':recordstatus', 'recordstatus', PDO::PARAM_STR),
+				array(':vcreatedby', 'vcreatedby', PDO::PARAM_STR),
 				),
-				'insert into divisi (divisiid,kodedivisi,namadivisi,parentid,notes,recordstatus)
-				values (:divisiid,:kodedivisi,:namadivisi,:parentid,:notes,:recordstatus)'
-			  ,
-			  'insert into divisi (divisiid,kodedivisi,namadivisi,parentid,notes,recordstatus)
-			  values (:divisiid,:kodedivisi,:namadivisi,:parentid,:notes,:recordstatus)');
+				'call InsertDivisi (:actiontype
+					,:divisiid
+					,:kodedivisi
+					,:namadivisi
+					,:parentid
+					,:teamid
+					,:notes
+					,:recordstatus,:vcreatedby)',
+				'call InsertDivisi (:actiontype
+				,:divisiid
+				,:kodedivisi
+				,:namadivisi
+				,:parentid
+				,:teamid
+				,:notes
+				,:recordstatus,:vcreatedby)');
 		}
 	}
 	public function actionSavepeserta() {
 		parent::actionSave();
 		$error = ValidateData(array(
+			array('divisidetailid', 'string', 'divisidetailid'),
 			array('divisiid', 'string', 'emptydivisiid'),
 			array('pesertaid', 'string', 'emptypesertaid'),
 			array('jabatanid', 'string', 'emptyjabatanid'),
 		));
 		if ($error == false) {
 			
-			ModifyCommand(1, $this->menuname, 'divisiid',
+			ModifyCommand(1, $this->menuname, 'divisidetailid',
 				array(
+				array(':divisidetailid', 'divisidetailid', PDO::PARAM_STR),
 				array(':divisiid', 'divisiid', PDO::PARAM_STR),
 				array(':pesertaid', 'pesertaid', PDO::PARAM_STR),
 				array(':jabatanid', 'jabatanid', PDO::PARAM_STR),
 				),
 				'insert into divisidetail (divisiid,pesertaid,jabatanid)
 			      values (:divisiid,:pesertaid,:jabatanid)',
-				'insert into divisidetail (divisiid, pesertaid,jabatanid)
-				values (:divisiid,:pesertaid,:jabatanid)');
-				
+				'update divisidetail  set divisiid = :divisiid, pesertaid = :pesertaid, jabatanid = :jabatanid
+				where divisidetail = :divisidetailid');
 		}
 		
 	}
@@ -282,13 +282,13 @@ class DivisiController extends AdminController {
         GetMessage('error', 'chooseone');
       }
       foreach ($ids as $id) {
-        $sql		 = "select recordstatus from groupaccess where groupaccessid = ".$id;
+        $sql		 = "select recordstatus from divisi where divisiid = ".$id;
         $status	 = Yii::app()->db->createCommand($sql)->queryRow();
         if ($status['recordstatus'] == 1) {
-          $sql = "update groupaccess set recordstatus = 0 where groupaccessid = ".$id;
+          $sql = "update divisi set recordstatus = 0 where divisiid = ".$id;
         } else
         if ($status['recordstatus'] == 0) {
-          $sql = "update groupaccess set recordstatus = 1 where groupaccessid = ".$id;
+          $sql = "update divisi set recordstatus = 1 where divisiid = ".$id;
         }
         $connection->createCommand($sql)->execute();
       }
@@ -335,7 +335,7 @@ class DivisiController extends AdminController {
         GetMessage('error', 'chooseone');
       }
       foreach ($ids as $id) {
-        $sql = "delete from groupmenu where groupmenuid = ".$id;
+        $sql = "delete from divisidetail where divisidetailid = ".$id;
         Yii::app()->db->createCommand($sql)->execute();
       }
       $transaction->commit();
@@ -368,18 +368,41 @@ class DivisiController extends AdminController {
 	public function actionDownPDF() {
 		parent::actionDownPDF();
 		$this->getSQL();
+		
 		$dataReader = Yii::app()->db->createCommand($this->sqldata)->queryAll();
 		$this->pdf->title					 = getCatalog('divisi');
 		$this->pdf->AddPage('P');
-		$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C');
-		$this->pdf->colheader			 = array(getCatalog('divisiid'), getCatalog('kodedivisi'),
-			getCatalog('namadivisi'), getCatalog('notes'), getCatalog('recordstatus'));
-		$this->pdf->setwidths(array(20, 30, 40, 50, 15));
-		$this->pdf->Rowheader();
-		$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L');
-		foreach ($dataReader as $row1) {
-			$this->pdf->row(array($row1['divisiid'], $row1['kodedivisi'], $row1['namadivisi'],$row1['notes'],
-				$row1['recordstatus']));
+		
+		foreach ($dataReader as $row) {
+			$this->pdf->sety($this->pdf->gety() + 5);
+			$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C', 'C');
+			$this->pdf->colheader			 = array(getCatalog('divisiid'), getCatalog('kodedivisi'),
+				getCatalog('namadivisi'), getCatalog('namateam'),getCatalog('notes'), getCatalog('recordstatus'));
+			$this->pdf->setwidths(array(20, 30, 40, 50, 15));
+			$this->pdf->Rowheader();
+			$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L', 'L');
+			$this->pdf->row(array($row['divisiid'], $row['kodedivisi'], $row['namadivisi'],$row['namateam'],$row['notes'],
+				$row['recordstatus']));
+
+				$sql2 = "select a0.divisidetailid,
+				b0.nama, b0.aliasid,
+				c0.kodejabatan, c0.namajabatan, c0.jobdesk
+				from divisidetail a0 
+				left join peserta b0 on b0.pesertaid = a0.pesertaid
+				left join jabatan c0 on c0.jabatanid = a0.jabatanid
+				where divisiid = ".$row['divisiid'];
+				$dataReader2 = Yii::app()->db->createCommand($sql2)->queryAll();
+				$this->pdf->sety($this->pdf->gety() + 7);
+				$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C');
+				$this->pdf->colheader			 = array(getCatalog('nama'), getCatalog('aliasid'), getCatalog('kodejabatan')
+				, getCatalog('namajabatan'), getCatalog('jobdesk'));
+				$this->pdf->setwidths(array(30, 30, 30, 30, 30, 30));
+				$this->pdf->Rowheader();
+				$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L');
+				foreach ($dataReader2 as $row2) {
+					$this->pdf->row(array($row2['nama'], $row2['aliasid'], $row2['kodejabatan'], $row2['namajabatan'], $row2['jobdesk']));
+				}	
+				
 		}
 		$this->pdf->Output();
 	}

@@ -64,7 +64,7 @@ class UseraccessController extends AdminController {
 				),
 			),
 		));
-    $useraccessid = filterinput(1, 'useraccessid');
+    $useraccessid = filterinput(2, 'useraccessid');
 		if ($useraccessid > 0) {
 			$this->sqlcountusergroup .= ' where a0.useraccessid = '.$useraccessid;
 			$this->sqldatausergroup	 .= ' where a0.useraccessid = '.$useraccessid;

@@ -5,7 +5,7 @@
 	<h3 class="card-title"><?php echo getCatalog('penilaian') ?></h3>
 			</div>
 	<div class="card-body">
-    <?php $this->widget('Button',	array('menuname'=>'penilaianhost')); ?>
+    <?php $this->widget('Button',	array('menuname'=>'penilaianhost')); ?><br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -31,7 +31,7 @@
 						'select' => array
 							(
 							'label' => getCatalog('detail'),
-              'imageUrl' => Yii::app()->baseUrl.'/images/detail.png',
+              				'imageUrl' => Yii::app()->baseUrl.'/images/detail.png',
 							'url' => '"#"',
 							'click' => "function() {
 								getdetail($(this).parent().parent().children(':nth-child(3)').text());
@@ -76,7 +76,12 @@
 					'value' => '$data["penilaianid"]'
 				),
 				array(
-					'header' => 'Grup',
+					'header' => 'Kode Grup',
+					'name' => 'kodegrup',
+					'value' => '$data["kodegrup"]'
+				),
+				array(
+					'header' => 'Nama Grup',
 					'name' => 'namagrup',
 					'value' => '$data["namagrup"]'
 				),
@@ -90,16 +95,6 @@
 					'name' => 'enddate',
 					'value' => '$data["enddate"]'
 				),
-				array(
-					'header' => 'Nama Peserta',
-					'name' => 'nama',
-					'value' => '$data["nama"]'
-                ),
-                array(
-					'header' => 'Rating',
-					'name' => 'rating',
-					'value' => '$data["rating"]'
-                ),
                 array(
 					'header' => 'Notes',
 					'name' => 'notes',
@@ -133,43 +128,43 @@
 					'classtype' => 'col-md-4',
 					'classtypebox' => 'col-md-8',
 					'PopUpName' => 'gbacenter.components.views.GrupbacaPopUp', 'PopGrid' => 'grupbacaid'));
-				?>
+				?><br>
 		<div class="row">
 					<div class="col-md-4">
-						<label for="startdate">Start Date</label>
+						<label for="startdate"><?php echo getCatalog("startdate"); ?></label>
 					</div>
 					<div class="col-md-8">
                     <input type="date" name="startdate" class="form-control">
 					</div>
-				</div>		
+				</div><br>		
             <div class="row">
 					<div class="col-md-4">
-						<label for="enddate">End Date</label>
+						<label for="enddate"><?php echo getCatalog("enddate"); ?></label>
 					</div>
 					<div class="col-md-8">
                     <input type="date" name="enddate" class="form-control">
 					</div>
-				</div>	        			
+				</div><br>	        			
         <div class="row">
 					<div class="col-md-4">
-						<label for="notes">Notes</label>
+						<label for="notes"><?php echo getCatalog("notes"); ?></label>
 					</div>
 					<div class="col-md-8">
                         <textarea type="text" class="form-control" rows="5" name="notes"></textarea>
 					</div>
-				</div>	
-				<ul class="nav nav-pills nav-fill">
+				</div><br>	
+				<ul class="nav nav-tabs" role="tablist">
 					<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#penilaianhost">Menu Penilaian</a></li>
-					<!--<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#jabatan"><?php echo getCatalog("penilaian") ?></a></li>-->
 				</ul>
 				<div class="tab-content">
 					<div id="penilaianhost" class="tab-pane">
+					<br>
 						<?php if (CheckAccess('penilaianhost', 'iswrite')) { ?>
 							<button name="CreateButtongroupmenu" type="button" class="btn btn-primary" onclick="newdatagruppenilaian()"><?php echo getCatalog('new') ?></button>
 						<?php } ?>
-						<?php if (CheckAccess('peserta', 'ispurge')) { ?>
+						<?php if (CheckAccess('penilaianhost', 'ispurge')) { ?>
 							<button name="PurgeButtongroupmenu" type="button" class="btn btn-danger" onclick="purgedatagroupmenu()"><?php echo getCatalog('purge') ?></button>
-						<?php } ?>
+						<?php } ?><br>
 						<?php
 						$this->widget('zii.widgets.grid.CGridView',
 							array(
@@ -196,8 +191,8 @@
 													'iswrite')),
 											'url' => '"#"',
 											'click' => "function() { 
-                        updatedatagroupmenu($(this).parent().parent().children(':nth-child(3)').text());
-                      }",
+													updatedatagroupmenu($(this).parent().parent().children(':nth-child(3)').text());
+												}",
 										),
 										'purge' => array (
 											'label' => getCatalog('purge'),
@@ -206,15 +201,15 @@
 													'ispurge')),
 											'url' => '"#"',
 											'click' => "function() { 
-                        purgedatagroupmenu($(this).parent().parent().children(':nth-child(3)').text());
-                      }",
+												purgedatagroupmenu($(this).parent().parent().children(':nth-child(3)').text());
+											}",
 										),
 									),
 								),
 								array(
-									'header' => getCatalog('penilaianid'),
-									'name' => 'penilaianid',
-									'value' => '$data["penilaianid"]'
+									'header' => 'ID',
+									'name' => 'penilaiandetailid',
+									'value' => '$data["penilaiandetailid"]'
 								),
 								array(
 									'header' => 'Peserta',
@@ -228,8 +223,8 @@
 								),
 								array(
 									'header' => 'Notes',
-									'name' => 'notesdetail',
-									'value' => '$data["notesdetail"]'
+									'name' => 'notes',
+									'value' => '$data["notes"]'
                                 ),
 							)
 						));
@@ -274,26 +269,6 @@
 									'name' => 'penilaianid',
 									'value' => '$data["penilaianid"]'
 								),
-								array(
-									'header' => getCatalog('namagrup'),
-									'name' => 'namagrup',
-									'value' => '$data["namagrup"]'
-								),
-								array(
-									'header' => getCatalog('startdate'),
-									'name' => 'startdate',
-									'value' => '$data["startdate"]'
-								),
-								array(
-									'header' => getCatalog('enddate'),
-									'name' => 'enddate',
-									'value' => '$data["enddate"]'
-								),
-								array(
-									'header' => getCatalog('notes'),
-									'name' => 'notes',
-									'value' => '$data["notes"]'
-                                ),
                                 array(
 									'header' => getCatalog('nama'),
 									'name' => 'nama',
@@ -305,10 +280,10 @@
 									'value' => '$data["rating"]'
 								),
 								array(
-									'header' => getCatalog('notesdetail'),
-									'name' => 'notesdetail',
-									'value' => '$data["notesdetail"]'
-								),
+									'header' => getCatalog('notes'),
+									'name' => 'notes',
+									'value' => '$data["notes"]'
+                                ),
 							)
 						));
 						?>
@@ -323,11 +298,14 @@
 	<div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-      <h4 class="modal-title">Menu Harian</h4>
+      <h4 class="modal-title">Menu Penilaian</h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
 			<div class="modal-body">
+			<input type="hidden" class="form-control" name="actiontype2">
 			<input type="hidden" class="form-control" name="penilaianid">
+			<input type="hidden" class="form-control" name="penilaiandetailid">
+			
 			<?php
 			$this->widget('DataPopUp',
 				array('id' => 'Widget', 'IDField' => 'pesertaid', 'ColField' => 'nama',
@@ -335,15 +313,27 @@
 				'classtype' => 'col-md-4',
 				'classtypebox' => 'col-md-8',
 				'PopUpName' => 'gbacenter.components.views.PesertaPopUp', 'PopGrid' => 'pesertaid'));
-			?>
+			?><br>
 			<div class="row">
 				<div class="col-md-4">
 					<label for="rating">Rating</label>
 				</div>
 				<div class="col-md-8">
-					<input type="text" class="form-control" name="rating">
+				<fieldset class="rating">
+					<input type="radio" id="star5" name="rating" value="5" onclick="getRate()" /><label class = "full" for="star5" title="Sangat Bagus - 5 bintang" onclick="getRate()" ></label>
+					
+					<input type="radio" id="star4" name="rating" value="4" onclick="getRate()" /><label class = "full" for="star4" title="Bagus Sekali - 4 bintang" onclick="getRate()" ></label>
+					
+					<input type="radio" id="star3" name="rating" value="3" onclick="getRate()" /><label class = "full" for="star3" title="Kurang Bagus - 3 bintang" onclick="getRate()" ></label>
+					
+					<input type="radio" id="star2" name="rating" value="2" onclick="getRate()" /><label class = "full" for="star2" title="Jelek - 2 bintang" onclick="getRate()" ></label>
+					
+					<input type="radio" id="star1" name="rating" value="1" onclick="getRate()" /><label class = "full" for="star1" title="Jelek Sekali- 1 bintang" onclick="getRate()" ></label>
+					
+				</fieldset>
+				   <input type="text" class="form-control" name="rating" readonly>
 				</div>
-			</div>
+			</div><br>
 			<div class="row">
 				<div class="col-md-4">
 					<label for="notesdetail">Notes</label>
@@ -351,7 +341,7 @@
 				<div class="col-md-8">
 				<textarea type="text" class="form-control" rows="5" name="notesdetail"></textarea>
 				</div>
-			</div>
+			</div><br>
 			<div class="modal-footer">
 				<button type="submit" class="btn btn-success" onclick="savedatamenupenilaian()"><?php echo getCatalog('save') ?></button>
         <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo getCatalog('close') ?></button>
@@ -361,3 +351,54 @@
 </div>
 
 <link rel="stylesheet" href="<?php echo Yii::app()->theme->baseUrl;?>/css/adminlte.min.css">
+<style type="text/css">
+		fieldset, label { margin: 0; padding: 0; }
+		body{ margin: 20px; }
+		h1 { font-size: 1.5em; margin: 10px; }
+
+		.rating { 
+		border: none;
+		float: left;
+		}
+
+		.rating > input { display: none; } 
+		.rating > label:before { 
+		margin: 5px;
+		font-size: 1.25em;
+		font-family: FontAwesome;
+		display: inline-block;
+		content: "\f005";
+		}
+
+		.rating > .half:before { 
+		content: "\f089";
+		position: absolute;
+		}
+
+		.rating > label { 
+		color: #ddd; 
+		float: right; 
+		}
+
+		/***** CSS untuk hover nya *****/
+
+		.rating > input:checked ~ label, /* memperlihatkan warna emas pada saat di klik */
+		.rating:not(:checked) > label:hover, /* hover untuk star berikutnya */
+		.rating:not(:checked) > label:hover ~ label { color: #FFD700;  } /* hover untuk star sebelumnya  */
+
+		.rating > input:checked + label:hover, /* hover ketika mengganti rating */
+		.rating > input:checked ~ label:hover,
+		.rating > label:hover ~ input:checked ~ label, /* seleksi hover */
+		.rating > input:checked ~ label:hover ~ label { color: #FFED85;  }
+  </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<script>
+	 $(document).ready(function () {
+		$("#rating .rate").click(function () {
+               
+			   
+				
+		};
+	 });
+</script>

@@ -4,30 +4,60 @@ class BacaanController extends AdminController {
 	public $module						 = 'gbacenter';
 	protected $pageTitle			 = 'Bacaan';
 	public $wfname						 = '';
-	public $sqldata						 = "select a0.bukubacaanid,a0.kodebuku,a0.namabuku,a0.jumlah, a0.total, a0.notes,a0.recordstatus,
-	b0.bukubacaandetailid  idbacaandetail, b0.hari, b0.menuharian, b0.url
+	public $sqldata						 = "select a0.bukubacaanid,a0.kodebuku,a0.namabuku,a0.jumlah, a0.total, a0.notes,a0.recordstatus
 	from bukubacaan a0 
-	join bukubacaandetail b0 on b0.bukubacaanid = a0.bukubacaanid
+  ";  
+	public $sqldatagroupmenu	 = "select b0.bukubacaandetailid, b0.bukubacaanid, b0.hari, b0.menuharian, b0.url
+	from bukubacaandetail b0 
   ";
-  
-    //peserta
-	public $sqldatagroupmenu	 = "select a0.bukubacaanid,a0.kodebuku,a0.namabuku,a0.jumlah, a0.total, a0.notes,a0.recordstatus,
-	b0.bukubacaandetailid  idbacaandetail, b0.bukubacaanid as idbukubacaanid, b0.hari, b0.menuharian, b0.url
-	from bukubacaan a0 
-	join bukubacaandetail b0 on b0.bukubacaanid = a0.bukubacaanid
-  ";
-
 	public $sqlcount					 = "select count(1) 
 	from bukubacaan a0 
-	join bukubacaandetail b0 on b0.bukubacaanid = a0.bukubacaanid
   ";
-  
-    //count Menu Harian
 	public $sqlcountgroupmenu	 = "select count(1) 
-	from bukubacaan a0 
-	join bukubacaandetail b0 on b0.bukubacaanid = a0.bukubacaanid
+	from bukubacaandetail b0 
   ";
+  public $sqlinsertdetail = "insert into bukubacaandetail (bukubacaanid,hari,menuharian,url)
+    values (:bukubacaanid,:hari,:menuharian,:url)";
+  public $sqlupdatedetail = 'update bukubacaandetail  set bukubacaanid = :bukubacaanid, hari = :hari , menuharian = :menuharian, url = :url
+  where bukubacaandetailid = :bukubacaandetailid';
 
+  public function actionUploadDetail() {
+		if (!file_exists(Yii::getPathOfAlias('webroot').'/uploads')) {
+			mkdir(Yii::getPathOfAlias('webroot').'/uploads');
+		}
+		$this->storeFolder = dirname('__FILES__').'/uploads/';
+    parent::actionUpload();
+    $target_file = dirname('__FILES__').'/uploads/' . basename($_FILES['upload']['name']);
+    Yii::import('ext.PHPExcel.XPHPExcel');
+		$phpExcel = XPHPExcel::createPHPExcel();
+    $objReader = PHPExcel_IOFactory::createReader('Excel2007');
+    $objPHPExcel = $objReader->load($target_file);
+    $objWorksheet = $objPHPExcel->getActiveSheet();
+    $highestRow = $objWorksheet->getHighestRow(); 
+    $highestColumn = $objWorksheet->getHighestColumn();
+    $highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn); 
+    $connection  = Yii::app()->db;
+    $transaction = $connection->beginTransaction();
+    try {
+      for ($row = 2; $row <= $highestRow; ++$row) {
+        $hari = $objWorksheet->getCellByColumnAndRow(0, $row)->getValue();
+        $menubacaan = $objWorksheet->getCellByColumnAndRow(1, $row)->getValue();
+        $url = $objWorksheet->getCellByColumnAndRow(2, $row)->getValue();
+        $command = $connection->createCommand($this->sqlinsertdetail);
+        $command->bindValue(':bukubacaanid', $_POST['grupbacaid'], PDO::PARAM_STR);
+        $command->bindValue(':hari', $hari, PDO::PARAM_STR);
+        $command->bindValue(':menuharian', $menubacaan, PDO::PARAM_STR);
+        $command->bindValue(':url', $url, PDO::PARAM_STR);
+        $command->execute();
+      }
+      $transaction->commit();
+      echo getcatalog('insertsuccess');
+    }
+    catch (CDbException $e) {
+      $transaction->rollBack();
+      echo 'Error Line: '.$row.' ==> '.$e->getMessage();
+    }
+	}
 	public function getSQL() {
 		$this->count	 = Yii::app()->db->createCommand($this->sqlcount)->queryScalar();
 		$where				 = "";
@@ -62,27 +92,27 @@ class BacaanController extends AdminController {
 				),
 			),
 		));
-	$bukubacaanid = filterinput(1, 'bukubacaanid',FILTER_SANITIZE_NUMBER_INT);
-	
-    if ($bukubacaanid > 0) {
-      $this->sqlcountgroupmenu .= ' where a0.bukubacaanid = '.$bukubacaanid;
-      $this->sqldatagroupmenu	 .= ' where a0.bukubacaanid = '.$bukubacaanid;
+
+	if (isset($_REQUEST['bukubacaanid'])) {
+		$bukubacaanid = $_REQUEST['bukubacaanid'];
+		$this->sqlcountgroupmenu .= ' where b0.bukubacaanid = '.$bukubacaanid;
+		$this->sqldatagroupmenu	 .= ' where b0.bukubacaanid = '.$bukubacaanid;
     }
 		$countgroupmenu				 = Yii::app()->db->createCommand($this->sqlcountgroupmenu)->queryScalar();
 		$dataProvidergroupmenu = new CSqlDataProvider($this->sqldatagroupmenu,
 			array(
 			'totalItemCount' => $countgroupmenu,
-			'keyField' => 'bukubacaanid',
+			'keyField' => 'bukubacaandetailid',
 			'pagination' => array(
 				'pageSize' => getparameter('DefaultPageSize'),
 				'pageVar' => 'page',
 			),
 			'sort' => array(
         'attributes' => array(
-					'bukubacaanid'
+					'bukubacaandetailid','bukubacaanid','hari','menuharian','url'
 				),
 				'defaultOrder' => array(
-					'bukubacaanid' => CSort::SORT_DESC
+					'bukubacaandetailid' => CSort::SORT_DESC
 				),
 			),
 		));
@@ -137,18 +167,15 @@ class BacaanController extends AdminController {
 		if ($id == '') {
 			GetMessage('error', 'chooseone');
 		}
-		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where a0.bukubacaanid = '.$id)->queryRow();
+		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where b0.bukubacaandetailid = '.$id)->queryRow();
 		if ($model !== null) {
 			echo CJSON::encode(array(
 				'status' => 'success',
+				'bukubacaandetailid' => $model['bukubacaandetailid'],
 				'bukubacaanid' => $model['bukubacaanid'],
-				'kodebuku' => $model['kodebuku'],
-				'namabuku' => $model['namabuku'],
-				'jumlah' => $model['jumlah'],
-				'total' => $model['total'],
-				'notes' => $model['notes'],
 				'hari' => $model['hari'],
 				'menuharian' => $model['menuharian'],
+				'url' => $model['url'],
 			));
 			Yii::app()->end();
 		}
@@ -182,74 +209,54 @@ class BacaanController extends AdminController {
 			ModifyCommand(1, $this->menuname, 'bukubacaanid',
 				array(
 				array(':bukubacaanid', 'bukubacaanid', PDO::PARAM_STR),
+				array(':actiontype', 'actiontype', PDO::PARAM_STR),
 				array(':kodebuku', 'kodebuku', PDO::PARAM_STR),
 				array(':namabuku', 'namabuku', PDO::PARAM_STR),
 				array(':jumlah', 'jumlah', PDO::PARAM_STR),
 				array(':total', 'total', PDO::PARAM_STR),
 				array(':notes', 'notes', PDO::PARAM_STR),
 				array(':recordstatus', 'recordstatus', PDO::PARAM_STR),
+				array(':vcreatedby', 'vcreatedby', PDO::PARAM_STR),
 				),
-				'insert into bukubacaan (bukubacaanid,kodebuku,namabuku,jumlah,total,notes,recordstatus)
-				values (:bukubacaanid,:kodebuku,:namabuku,:jumlah,:total,:notes,:recordstatus)'
-			  ,
-			  'update bukubacaan
-			  	set kodebuku = :kodebuku,namabuku = :namabuku,jumlah = :jumlah,total = :total
-			  	,notes = :notes,recordstatus = :recordstatus
-			  	where bukubacaanid = :bukubacaanid'
-			  );
+				'call InsertBacaan (:actiontype
+					,:bukubacaanid
+					,:kodebuku
+					,:namabuku
+					,:jumlah
+					,:total
+					,:notes
+					,:recordstatus,:vcreatedby)',
+				'call InsertBacaan (:actiontype
+				,:bukubacaanid
+				,:kodebuku
+				,:namabuku
+				,:jumlah
+				,:total
+				,:notes
+				,:recordstatus,:vcreatedby)');
 		}
 	}
 	public function actionSavemenuharian() {
 		parent::actionSave();
 		$error = ValidateData(array(
+			array('bukubacaandetailid', 'string', 'emptybukubacaandetailid'),
 			array('bukubacaanid', 'string', 'emptybukubacaanid'),
 			array('kodebuku', 'string', 'emptykodebuku'),
 			array('namabuku', 'string', 'emptynamabuku'),
 		));
 		if ($error == false) {
 			
-			ModifyCommand(1, $this->menuname, 'bukubacaanid',
+			ModifyCommand(1, $this->menuname, 'bukubacaandetailid',
 				array(
+				array(':bukubacaandetailid', 'bukubacaandetailid', PDO::PARAM_STR),
 				array(':bukubacaanid', 'bukubacaanid', PDO::PARAM_STR),
 				array(':hari', 'hari', PDO::PARAM_STR),
 				array(':menuharian', 'menuharian', PDO::PARAM_STR),
 				array(':url', 'url', PDO::PARAM_STR),
 				),
-				'insert into bukubacaandetail (bukubacaanid,hari,menuharian,url)
-			      values (:bukubacaanid,:hari,:menuharian,:url)',
-				'insert into bukubacaandetail (bukubacaanid,hari,menuharian,url)
-			      values (:bukubacaanid,:hari,:menuharian,:url)');
-				
-		}
-		
-	}
-	public function actionSaveuserdash() {
-		parent::actionSave();
-		$error = ValidateData(array(
-			array('groupaccessid', 'string', 'emptygroupaccessid'),
-			array('widgetid', 'string', 'emptywidgetid'),
-			array('menuaccessid', 'string', 'emptymenuaccessid'),
-			array('position', 'string', 'emptyposition'),
-			array('webformat', 'string', 'emptywebformat'),
-			array('dashgroup', 'string', 'emptydashgroup'),
-		));
-		if ($error == false) {
-			ModifyCommand(1, $this->menuname, 'userdashid',
-				array(
-				array(':userdashid', 'userdashid', PDO::PARAM_STR),
-				array(':groupaccessid', 'groupaccessid', PDO::PARAM_STR),
-				array(':widgetid', 'widgetid', PDO::PARAM_STR),
-				array(':menuaccessid', 'menuaccessid', PDO::PARAM_STR),
-				array(':position', 'position', PDO::PARAM_STR),
-				array(':webformat', 'webformat', PDO::PARAM_STR),
-				array(':dashgroup', 'dashgroup', PDO::PARAM_STR),
-				),
-				'insert into userdash (groupaccessid,widgetid,menuaccessid,position,webformat,dashgroup)
-			      values (:groupaccessid,:widgetid,:menuaccessid,:position,:webformat,:dashgroup)',
-				'update userdash
-			      set groupaccessid = :groupaccessid,widgetid = :widgetid,menuaccessid = :menuaccessid,position = :position,webformat = :webformat,dashgroup = :dashgroup
-			      where userdashid = :userdashid');
-		}
+				$this->sqlinsertdetail,
+				$this->sqlupdatedetail);				
+		}		
 	}
 	public function actionDelete() {
 		parent::actionDelete();
@@ -261,13 +268,13 @@ class BacaanController extends AdminController {
         GetMessage('error', 'chooseone');
       }
       foreach ($ids as $id) {
-        $sql		 = "select recordstatus from groupaccess where groupaccessid = ".$id;
+        $sql		 = "select recordstatus from bukubacaan where bukubacaanid = ".$id;
         $status	 = Yii::app()->db->createCommand($sql)->queryRow();
         if ($status['recordstatus'] == 1) {
-          $sql = "update groupaccess set recordstatus = 0 where groupaccessid = ".$id;
+          $sql = "update bukubacaan set recordstatus = 0 where bukubacaanid = ".$id;
         } else
         if ($status['recordstatus'] == 0) {
-          $sql = "update groupaccess set recordstatus = 1 where groupaccessid = ".$id;
+          $sql = "update bukubacaan set recordstatus = 1 where bukubacaanid = ".$id;
         }
         $connection->createCommand($sql)->execute();
       }
@@ -314,7 +321,7 @@ class BacaanController extends AdminController {
         GetMessage('error', 'chooseone');
       }
       foreach ($ids as $id) {
-        $sql = "delete from groupmenu where groupmenuid = ".$id;
+        $sql = "delete from bukubacaandetail where bukubacaandetailid = ".$id;
         Yii::app()->db->createCommand($sql)->execute();
       }
       $transaction->commit();
@@ -350,16 +357,65 @@ class BacaanController extends AdminController {
 		$dataReader = Yii::app()->db->createCommand($this->sqldata)->queryAll();
 		$this->pdf->title					 = getCatalog('bacaan');
 		$this->pdf->AddPage('L');
-		$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C', 'C');
-		$this->pdf->colheader			 = array(getCatalog('bukubacaanid'), getCatalog('kodebuku'),
-			getCatalog('namabuku'), getCatalog('jumlah'), getCatalog('notes'), getCatalog('recordstatus'));
-		$this->pdf->setwidths(array(25, 30, 40, 20, 45, 15));
-		$this->pdf->Rowheader();
-		$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L');
+
 		foreach ($dataReader as $row1) {
+			//var_dump($row);die();
+			$this->pdf->sety($this->pdf->gety() + 5);
+			$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C', 'C');
+			$this->pdf->colheader			 = array(getCatalog('bukubacaanid'), getCatalog('kodebuku'),
+			getCatalog('namabuku'), getCatalog('jumlah'), getCatalog('notes'), getCatalog('recordstatus'));
+			$this->pdf->setwidths(array(25, 30, 40, 20, 45, 15));
+			$this->pdf->Rowheader();
+			$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L');
 			$this->pdf->row(array($row1['bukubacaanid'], $row1['kodebuku'], $row1['namabuku'],$row1['jumlah'],
 			$row1['notes'],$row1['recordstatus']));
+
+				$sql2 = "select b0.bukubacaanid, b0.hari, b0.menuharian, b0.url
+				from bukubacaandetail b0 
+				where b0.bukubacaanid = ".$row1['bukubacaanid'];
+				$dataReader2 = Yii::app()->db->createCommand($sql2)->queryAll();
+				$this->pdf->sety($this->pdf->gety() + 7);
+				$this->pdf->colalign			 = array('C', 'C', 'C');
+				$this->pdf->colheader			 = array(getCatalog('hari'), getCatalog('menuharian'), getCatalog('url')
+				);
+				$this->pdf->setwidths(array(30, 30, 30, 30));
+				$this->pdf->Rowheader();
+				$this->pdf->coldetailalign = array('L', 'L', 'L', 'L',);
+				foreach ($dataReader2 as $row2) {
+					$this->pdf->row(array($row2['hari'], $row2['menuharian'], $row2['url']));
+				}	
+				
 		}
 		$this->pdf->Output();
-	}
+  }
+  
+  public function actionAmbilBuku(){
+    $data = (isset($_REQUEST['data'])?$_REQUEST['data']:0);
+    if ($data != 0) {
+      $datas = explode(',',$data);
+
+      $kodebuku = '';
+      $hari = '';
+
+      foreach ($datas as $datapeserta) {
+        $expdata = explode('=',$datapeserta);
+        if ($expdata[0] == "kodebuku") {
+          $kodebuku = $expdata[1];
+        }
+        if ($expdata[0] == "hari") {
+          $hari = $expdata[1];
+        }
+      }
+
+      $sql = "select url 
+        from bukubacaan a
+        join bukubacaandetail b on b.bukubacaanid = a.bukubacaanid 
+        where kodebuku = '".$kodebuku."' and hari = ".$hari;
+      $url = Yii::app()->db->createCommand($sql)->queryScalar();
+
+      echo $url;
+    } else {
+      echo 'Kesalahan penulisan Format Perintah: <b>ambilbuku kodebuku=,hari=</b>';
+    }
+  }
 }

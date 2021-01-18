@@ -6,6 +6,7 @@
 	</div>
 	<div class="card-body">
     <?php $this->widget('Button',	array('menuname'=>'jabatan')); ?>
+	<br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -113,8 +114,7 @@
 </div>
 <?php $this->widget('SearchPopUp',array('searchitems'=>array(
   array('searchtype'=>'text','searchname'=>'kodejabatan'),
-  array('searchtype'=>'text','searchname'=>'namajabatan'),
-  array('searchtype'=>'text','searchname'=>'jobdesk')
+  array('searchtype'=>'text','searchname'=>'namajabatan')
 ))); ?>
 <?php $this->widget('HelpPopUp',array('helpurl'=>'https://www.youtube.com/embed/BelvIaMxKag')); ?>
 <div id="InputDialog" class="modal fade" role="dialog">
@@ -135,6 +135,7 @@
 						<input type="text" class="form-control" name="kodejabatan">
 					</div>
 				</div>
+				<br>
         <div class="row">
 					<div class="col-md-4">
 						<label for="namajabatan"><?php echo getCatalog('namajabatan') ?></label>
@@ -143,14 +144,16 @@
 						<input type="text" class="form-control" name="namajabatan">
 					</div>
 				</div>
+				<br>
         <div class="row">
 					<div class="col-md-4">
 						<label for="jobdesk"><?php echo getCatalog('jobdesk') ?></label>
 					</div>
 					<div class="col-md-8">
-						<input type="text" class="form-control" name="jobdesk">
+					<textarea type="text" class="form-control" rows="5" name="jobdesk"></textarea>
 					</div>
 				</div>
+				<br>
         <div class="row">
                 <div class="col-md-4">
                     <label for="istelegram"><?php echo getCatalog('istelegram') ?></label>
@@ -159,6 +162,7 @@
                     <input type="checkbox" name="istelegram">
                 </div>
         </div> 
+		<br>
         <div class="row">
                 <div class="col-md-4">
                     <label for="recordstatus"><?php echo getCatalog('recordstatus') ?></label>
@@ -168,8 +172,6 @@
                 </div>
         </div>       
       </div>
-    
-        
       <div class="modal-footer">
 				<button type="submit" class="btn btn-success" onclick="savedata()"><?php echo getCatalog('save') ?></button>
         <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo getCatalog('close') ?></button>

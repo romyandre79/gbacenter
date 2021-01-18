@@ -99,10 +99,11 @@ $product = new CSqlDataProvider($sqldata,
 							</span>
 						</div>
 					</div>
-				</div>			
+				</div>	
+				<br>		
 				<div class="row">
 					<div class="col-md-4">
-						<label class="control-label" for="<?php echo $this->IDField; ?>_search_aliasid">Alias</label>
+						<label class="control-label" for="<?php echo $this->IDField; ?>_search_aliasid"><?php echo getCatalog('aliasid');?></label>
 					</div>
 					<div class="col-md-8">
 						<div class="input-group">
@@ -110,6 +111,7 @@ $product = new CSqlDataProvider($sqldata,
 						</div>
 					</div>
 				</div>
+				<br>
 				<?php
 				$this->widget('zii.widgets.grid.CGridView',
 					array(

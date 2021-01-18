@@ -6,6 +6,7 @@
 	</div>
 	<div class="card-body">
     <?php $this->widget('Button',	array('menuname'=>'team')); ?>
+	<br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -88,13 +89,13 @@
 				),
 				array(
 					'header' => getCatalog('koordinator'),
-					'name' => 'koordinator',
-					'value' => '$data["koordinator"]'
+					'name' => 'namakoordinator',
+					'value' => '$data["namakoordinator"]'
                 ),
                 array(
 					'header' => getCatalog('wakilkoordinator'),
-					'name' => 'wakilkoordinator',
-					'value' => '$data["wakilkoordinator"]'
+					'name' => 'namawakilkoordinator',
+					'value' => '$data["namawakilkoordinator"]'
                 ),
 				array(
 					'header' => getCatalog('keterangan'),
@@ -111,16 +112,18 @@
 			)
 		));
 		?>
+		
     <?php $this->widget('Button',	array('menuname'=>'team')); ?>
 	</div>
 </div>
 <?php $this->widget('SearchPopUp',array('searchitems'=>array(
   array('searchtype'=>'text','searchname'=>'kodeteam'),
   array('searchtype'=>'text','searchname'=>'namateam'),
-  array('searchtype'=>'text','searchname'=>'koordinator'),
-  array('searchtype'=>'text','searchname'=>'wakilkoordinator')
+  array('searchtype'=>'text','searchname'=>'namakoordinator'),
+  array('searchtype'=>'text','searchname'=>'namawakilkoordinator')
 ))); ?>
 <?php $this->widget('HelpPopUp',array('helpurl'=>'https://www.youtube.com/embed/BelvIaMxKag')); ?>
+
 <div id="InputDialog" class="modal fade" role="dialog">
 	<div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -138,7 +141,7 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="kodeteam">
 					</div>
-				</div>
+				</div><br>
         <div class="row">
 					<div class="col-md-4">
 						<label for="namateam">Nama Team</label>
@@ -146,31 +149,31 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="namateam">
 					</div>
-				</div>
-        <div class="row">
-					<div class="col-md-4">
-						<label for="koordinator">Koordinator</label>
-					</div>
-					<div class="col-md-8">
-						<input type="text" class="form-control" name="koordinator">
-					</div>
-				</div>
-		<div class="row">
-					<div class="col-md-4">
-						<label for="wakilkoordinator">Wakil Koordinator</label>
-					</div>
-					<div class="col-md-8">
-						<input type="text" class="form-control" name="wakilkoordinator">
-					</div>
-				</div>
+				</div><br>
+		<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'koordinator', 'ColField' => 'namakoordinator',
+					'IDDialog' => 'koordinator_dialog', 'titledialog' => 'Koordinator',
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'gbacenter.components.views.PesertaPopUp', 'PopGrid' => 'koordinator'));
+				?><br>
+		<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget2', 'IDField' => 'wakilkoordinator', 'ColField' => 'namawakilkoordinator',
+					'IDDialog' => 'wakilkoordinator_dialog', 'titledialog' => 'Wakil Koordinator',
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'gbacenter.components.views.PesertaPopUp', 'PopGrid' => 'wakilkoordinator'));
+				?><br>
 		<div class="row">
 					<div class="col-md-4">
 						<label for="keterangan"><?php echo getCatalog('keterangan') ?></label>
 					</div>
 					<div class="col-md-8">
-					<input type="text" class="form-control" name="keterangan">
+					<textarea type="text" class="form-control" rows="5" name="keterangan"></textarea>
 					</div>
-				</div>
+				</div><br>
         <div class="row">
                 <div class="col-md-4">
                     <label for="recordstatus"><?php echo getCatalog('recordstatus') ?></label>
@@ -178,7 +181,7 @@
                 <div class="col-md-8">
                     <input type="checkbox" name="recordstatus">
                 </div>
-        </div>       
+        </div><br>       
       </div>
     
         

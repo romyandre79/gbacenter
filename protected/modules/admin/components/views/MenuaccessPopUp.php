@@ -62,6 +62,7 @@ $product = new CSqlDataProvider($sqldata,
 <?php echo $this->IDField ?>searchdata()
 			}
 		});
+    
 	});
 </script>
 <div class="row">
@@ -80,12 +81,12 @@ $product = new CSqlDataProvider($sqldata,
 	</div>
 </div>
 
-<div id="<?php echo $this->IDDialog ?>" class="modal fade" role="dialog">
+<div id="<?php echo $this->IDDialog ?>" class="modal fade">
 	<div class="modal-dialog modal-lg">	
 		<div class="modal-content">
       <div class="modal-header">
       <h4 class="modal-title"><?php echo $this->titledialog ?></h4>
-				<button type="button" class="close" data-dismiss="modal" href="#<?php echo $this->IDDialog ?>">&times;</button>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
 				<div class="row">

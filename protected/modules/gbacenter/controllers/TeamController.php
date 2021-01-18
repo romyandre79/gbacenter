@@ -4,12 +4,30 @@ class TeamController extends AdminController {
 	public $module			 = 'Gbacenter';
 	protected $pageTitle = 'Team';
 	public $wfname			 = '';
-    public $sqldata			 = "select a0.teamid,a0.kodeteam,a0.namateam,a0.koordinator,a0.wakilkoordinator
-    ,a0.keterangan, a0.recordstatus
-    from team a0 
+	public $sqldata			 = "select teamid, kodeteam, namateam, koordinator, wakilkoordinator
+	, keterangan, recordstatus, namakoordinator, namawakilkoordinator 
+	from
+	(select a0.teamid,a0.kodeteam,a0.namateam,a0.koordinator,a0.wakilkoordinator
+	,a0.keterangan, a0.recordstatus,
+	(select nama 
+	FROM peserta
+	WHERE pesertaid = a0.koordinator) AS namakoordinator,
+	(select nama 
+	FROM peserta
+	WHERE pesertaid = a0.wakilkoordinator) AS namawakilkoordinator
+	from team a0) team
   ";
-	public $sqlcount		 = "select count(1) 
-    from team a0 
+	public $sqlcount		 = "select count(1)
+	from
+	(select a0.teamid,a0.kodeteam,a0.namateam,a0.koordinator,a0.wakilkoordinator
+	,a0.keterangan, a0.recordstatus,
+	(select nama 
+	FROM peserta
+	WHERE pesertaid = a0.koordinator) AS namakoordinator,
+	(select nama 
+	FROM peserta
+	WHERE pesertaid = a0.wakilkoordinator) AS namawakilkoordinator
+	from team a0) team
   ";
 	public function getSQL() {
 		$this->count = Yii::app()->db->createCommand($this->sqlcount)->queryScalar();
@@ -17,14 +35,14 @@ class TeamController extends AdminController {
 		$teamid		 = filterinput(2, 'teamid', FILTER_SANITIZE_STRING);
 		$kodeteam	 = filterinput(2, 'kodeteam', FILTER_SANITIZE_STRING);
 		$namateam = filterinput(2, 'namateam', FILTER_SANITIZE_STRING);
-        $kordinator	 = filterinput(2, 'koordinator', FILTER_SANITIZE_STRING);
-        $wakilkordinator	 = filterinput(2, 'wakilkordinator', FILTER_SANITIZE_STRING);
-		$where			 .= " where a0.kodeteam like '%".$kodeteam."%'
-            and a0.namateam like '%".$namateam."%'
-            and a0.koordinator like '%".$koordinator."%'
-			and a0.wakilkoordinator like '%".$wakilkoordinator."%'";
+        $namakoordinator	 = filterinput(2, 'namakoordinator', FILTER_SANITIZE_STRING);
+        $namawakilkoordinator	 = filterinput(2, 'namawakilkoordinator', FILTER_SANITIZE_STRING);
+		$where			 .= " where kodeteam like '%".$kodeteam."%'
+            and namateam like '%".$namateam."%'
+            and namakoordinator like '%".$namakoordinator."%'
+			and namawakilkoordinator like '%".$namawakilkoordinator."%'";
 		if (($teamid !== '0') && ($teamid !== '')) {
-			$where .= " and a0.teamid in (".$teamid.")";
+			$where .= " and teamid in (".$teamid.")";
 		}
 		$this->sqldata = $this->sqldata.$where;
 		$this->count	 = Yii::app()->db->createCommand($this->sqlcount.$where)->queryScalar();
@@ -42,7 +60,7 @@ class TeamController extends AdminController {
 			),
 			'sort' => array(
 				'attributes' => array(
-					'teamid', 'kodeteam', 'namateam', 'koordinator', 'wakilkoordinator', 'keterangan', 'recordstatus'
+					'teamid', 'kodeteam', 'namateam', 'namakoordinator', 'namawakilkoordinator', 'keterangan', 'recordstatus'
 				),
 				'defaultOrder' => array(
 					'teamid' => CSort::SORT_DESC
@@ -71,7 +89,10 @@ class TeamController extends AdminController {
 				'namateam' => $model['namateam'],
 				'kodeteam' => $model['kodeteam'],
                 'koordinator' => $model['koordinator'],
-                'wakilkoordinator' => $model['wakilkoordinator'],
+				'wakilkoordinator' => $model['wakilkoordinator'],
+				'keterangan' => $model['keterangan'],
+				'namakoordinator' => $model['namakoordinator'],
+                'namawakilkoordinator' => $model['namawakilkoordinator'],
                 'recordstatus' => $model['recordstatus'],
 			));
 			Yii::app()->end();
@@ -109,21 +130,52 @@ class TeamController extends AdminController {
 		$connection	 = Yii::app()->db;
 		$transaction = $connection->beginTransaction();
 		try {
-      $ids = filterinput(4,'id');
-      if ($ids == '') {
-        GetMessage('error', 'chooseone');
-      }
-      foreach ($ids as $id) {
-        $sql = "delete from team where teamid = ".$id;
-        Yii::app()->db->createCommand($sql)->execute();
-      }
-      $transaction->commit();
-      getMessage('success', 'alreadysaved');
+		$ids = filterinput(4,'id');
+		if ($ids == '') {
+			GetMessage('error', 'chooseone');
+		}
+
+		foreach ($ids as $id) {
+			$sql = "delete from team where teamid = ".$id;
+			Yii::app()->db->createCommand($sql)->execute();
+		}
+      
+		$transaction->commit();
+		getMessage('success', 'alreadysaved');
 		} catch (CDbException $e) {
 			$transaction->rollback();
 			getMessage('error', $e->getMessage());
 		}
 	}
+
+	public function actionDelete() {
+		parent::actionDelete();
+		$connection	 = Yii::app()->db;
+		$transaction = $connection->beginTransaction();
+		try {
+		$ids = filterinput(4,'id');
+		if ($ids == '') {
+			GetMessage('error', 'chooseone');
+		}
+		foreach ($ids as $id) {
+			$sql		 = "select recordstatus from team where teamid = ".$id;
+			$status	 = Yii::app()->db->createCommand($sql)->queryRow();
+			if ($status['recordstatus'] == 1) {
+			$sql = "update team set recordstatus = 0 where teamid = ".$id;
+			} else
+			if ($status['recordstatus'] == 0) {
+			$sql = "update team set recordstatus = 1 where teamid = ".$id;
+			}
+			$connection->createCommand($sql)->execute();
+      	}
+		$transaction->commit();
+		getMessage('success', 'alreadysaved');
+			} catch (CDbException $e) {
+				$transaction->rollback();
+				getMessage('error', $e->getMessage());
+			}
+	}
+
 	public function actionDownPDF() {
 		parent::actionDownPDF();
 		$this->getSQL();
@@ -132,14 +184,14 @@ class TeamController extends AdminController {
 		$this->pdf->AddPage('P');
 		$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C');
 		$this->pdf->colheader			 = array(getCatalog('teamid'), getCatalog('kodeteam'),
-            getCatalog('namateam'), getCatalog('koordinator'), getCatalog('wakilkoordinator')
+            getCatalog('namateam'), getCatalog('namakoordinator'), getCatalog('wakilkoordinator')
             , getCatalog('keterangan'));
-		$this->pdf->setwidths(array(10, 60, 60, 60));
+		$this->pdf->setwidths(array(10, 20, 40, 40, 40, 40));
 		$this->pdf->Rowheader();
-		$this->pdf->coldetailalign = array('L', 'L', 'L', 'L','L');
+		$this->pdf->coldetailalign = array('L', 'L', 'L', 'L','L', 'L');
 		foreach ($dataReader as $row1) {
 			$this->pdf->row(array($row1['teamid'], $row1['kodeteam'], $row1['namateam'],
-				$row1['koordinator'], $row1['wakilkoordinator'], $row1['keterangan']));
+				$row1['namakoordinator'], $row1['namawakilkoordinator'], $row1['keterangan']));
 		}
 		$this->pdf->Output();
 	}

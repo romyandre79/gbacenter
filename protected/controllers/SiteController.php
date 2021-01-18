@@ -6,7 +6,25 @@ class SiteController extends Controller {
 		parent::actionIndex();
     $this->pageTitle = getparameter('tagline');
     $this->description = getparameter('sitetitle').' '.getparameter('tagline');
-    $this->render('index');
+    $citys = Yii::app()->db->createCommand("
+      select cityid,cityname
+      from city
+      where recordstatus = 1 
+      order by cityname asc
+      ")->queryAll();
+    $provinces = Yii::app()->db->createCommand("
+      select provinceid,provincename
+      from province
+      where recordstatus = 1 
+      order by provincename asc
+      ")->queryAll();
+    $countrys = Yii::app()->db->createCommand("
+      select countryid,countryname
+      from country
+      where recordstatus = 1
+      order by countryname asc 
+      ")->queryAll();
+    $this->render('index',array('citys'=>$citys,'provinces'=>$provinces,'countrys'=>$countrys));
 	}
 	public function actionError() {
 		$error = Yii::app()->errorHandler->error;

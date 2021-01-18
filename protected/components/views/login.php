@@ -82,7 +82,7 @@
       </div><!-- /.col -->
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
-          <li class="breadcrumb-item"><a style="color:#4674a7" href="#">Home</a></li>
+          <li class="breadcrumb-item"><a style="color:#4674a7" href="admin">Home</a></li>
           <li class="breadcrumb-item active" style="color:#000">Login</li>
         </ol>
       </div><!-- /.col -->

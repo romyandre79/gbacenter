@@ -32,3 +32,17 @@ if (CheckAccess($this->menuname,'ispurge')) { ?>
   </div>
 <?php } } ?>
 <button name="HelpButton" type="button" class="btn btn-primary" data-toggle="modal" data-target="#HelpDialog"><?php echo getCatalog('help') ?></button>
+<?php if ($this->isupload == true) {
+$this->widget('ext.dropzone.EDropzone',
+  array(
+  'name' => 'upload',
+  'url' => Yii::app()->createUrl($this->uploadurl),
+  'mimeTypes' => array('.xlsx'),
+  'options' => CMap::mergeArray($this->options, $this->dict),
+  'events' => array(
+    'success' => 'js:toastr.info(param2)',
+    'error' => 'js:toastr.error(param2)'
+  ),
+  'htmlOptions' => array('style' => 'height:95%; overflow: hidden;'),
+));
+}?>

@@ -46,7 +46,7 @@ class Formatter extends CFormatter {
 	public function formatTime($value) {
 		if ($value === null) return null;
 		if ($value === '') return '';
-		$objdate = DateTime::createFromFormat('H:i:s', $value);
+		$objdate = DateTime::createFromFormat('H:i', $value);
 		return $objdate->format(getparameter('timeformat'));
 	}
 	public function formatDateTime($value) {

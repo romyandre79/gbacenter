@@ -1,4 +1,4 @@
-<script src="<?php echo Yii::app()->baseUrl; ?>/js/gbacenter/divisi2.js"></script>
+<script src="<?php echo Yii::app()->baseUrl; ?>/js/gbacenter/divisi.js"></script>
 <script src="<?php echo Yii::app()->theme->baseUrl;?>/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <div class="card card-purple">
 	<div class="card-header with-border">
@@ -6,6 +6,7 @@
 			</div>
 	<div class="card-body">
     <?php $this->widget('Button',	array('menuname'=>'divisi')); ?>
+	<br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -88,7 +89,12 @@
 				array(
 					'header' => getCatalog('parentid'),
 					'name' => 'parentid',
-					'value' => '$data["parentid"]'
+					'value' => '$data["parentdivisi"]'
+				),
+				array(
+					'header' => getCatalog('namateam'),
+					'name' => 'namateam',
+					'value' => '$data["namateam"]'
 				),
 				array(
 					'header' => getCatalog('notes'),
@@ -109,8 +115,9 @@
 	</div>
 </div>
 <?php $this->widget('SearchPopUp',array('searchitems'=>array(
-  array('searchtype'=>'text','searchname'=>'kodedivisi'),
-  array('searchtype'=>'text','searchname'=>'namadivisi')
+   array('searchtype'=>'text','searchname'=>'kodedivisi'),
+   array('searchtype'=>'text','searchname'=>'namadivisi'),
+   array('searchtype'=>'text','searchname'=>'namateam')
 ))); ?>
 <?php $this->widget('HelpPopUp',array('helpurl'=>'https://www.youtube.com/embed/e2pfyuqR0RU')); ?>
 <div id="InputDialog" class="modal fade" role="dialog">
@@ -125,36 +132,44 @@
 				<input type="hidden" class="form-control" name="divisiid">
         <div class="row">
 					<div class="col-md-4">
-						<label for="kodedivisi">Kode Divisi</label>
+						<label for="kodedivisi"><?php echo getCatalog('kodedivisi')?></label>
 					</div>
 					<div class="col-md-8">
-						<input type="text" class="form-control" name="kodedivisi">
+						<input type="text" class="form-control" name="kodedivisi" maxlength="15">
 					</div>
-				</div>
+				</div><br>
         <div class="row">
 					<div class="col-md-4">
-						<label for="namadivisi">Nama Divisi</label>
+						<label for="namadivisi"><?php echo getCatalog('namadivisi')?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="namadivisi">
 					</div>
-				</div>
+				</div><br>
+				<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'parentid', 'ColField' => 'parentdivisi',
+					'IDDialog' => 'parentid_dialog', 'titledialog' => getCatalog('parentdivisi'),
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'gbacenter.components.views.DivisiPopUp', 'PopGrid' => 'parentid'));
+				?><br>	
+				<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'teamid', 'ColField' => 'namateam',
+					'IDDialog' => 'teamid_dialog', 'titledialog' => getCatalog('namateam'),
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'gbacenter.components.views.TeamPopUp', 'PopGrid' => 'teamid'));
+				?><br>		
 		<div class="row">
 					<div class="col-md-4">
-						<label for="parentid">Parent id</label>
+						<label for="notes"><?php echo getCatalog('notes')?></label>
 					</div>
 					<div class="col-md-8">
-						<input type="text" class="form-control" name="parentid">
+					<textarea type="text" class="form-control" rows="5" name="notes"></textarea>
 					</div>
-				</div>		
-		<div class="row">
-					<div class="col-md-4">
-						<label for="notes">Notes</label>
-					</div>
-					<div class="col-md-8">
-						<input type="text" class="form-control" name="notes">
-					</div>
-				</div>		
+				</div><br>		
         <div class="row">
 					<div class="col-md-4">
 						<label for="recordstatus"><?php echo getCatalog('recordstatus') ?></label>
@@ -162,11 +177,11 @@
 					<div class="col-md-8">
 						<input type="checkbox" name="recordstatus">
 					</div>
-				</div>
-				<ul class="nav nav-pills nav-fill">
-					<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#peserta">Peserta dan Jabatan</a></li>
-					<!--<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#jabatan"><?php echo getCatalog("jabatan") ?></a></li>-->
+				</div><br>
+				<ul class="nav nav-tabs" role="tablist">
+					<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#peserta"><?php echo getCatalog("pengurus")." dan ".getCatalog("jabatan") ?></a></li>
 				</ul>
+				<br>
 				<div class="tab-content">
 					<div id="peserta" class="tab-pane">
 						<?php if (CheckAccess('peserta', 'iswrite')) { ?>
@@ -176,6 +191,7 @@
 							<button name="PurgeButtongroupmenu" type="button" class="btn btn-danger" onclick="purgedatagroupmenu()"><?php echo getCatalog('purge') ?></button>
 						<?php } ?>
 						<?php
+						echo "<br>";
 						$this->widget('zii.widgets.grid.CGridView',
 							array(
 							'dataProvider' => $dataProvidergroupmenu,
@@ -217,9 +233,9 @@
 									),
 								),
 								array(
-									'header' => getCatalog('pesertaid'),
-									'name' => 'pesertaid',
-									'value' => '$data["pesertaid"]'
+									'header' => 'ID',
+									'name' => 'divisidetailid',
+									'value' => '$data["divisidetailid"]'
 								),
 								array(
 									'header' => getCatalog('nama'),
@@ -230,78 +246,6 @@
 									'header' => getCatalog('aliasid'),
 									'name' => 'aliasid',
 									'value' => '$data["aliasid"]'
-								),
-								array(
-									'header' => getCatalog('asalgereja'),
-									'name' => 'asalgereja',
-									'value' => '$data["asalgereja"]'
-								),
-								array(
-									'header' => getCatalog('jabatangereja'),
-									'name' => 'jabatangereja',
-									'value' => '$data["jabatangereja"]'
-								),
-							)
-						));
-						?>
-					</div>
-					<div id="jabatan" class="tab-pane">
-						<?php if (CheckAccess('jabatan', 'iswrite')) { ?>
-							<button name="CreateButtonuserdash" type="button" class="btn btn-primary" onclick="newdatajabatan()"><?php echo getCatalog('new') ?></button>
-						<?php } ?>
-						<?php if (CheckAccess('jabatan', 'ispurge')) { ?>
-							<button name="PurgeButtonuserdash" type="button" class="btn btn-danger" onclick="purgedatauserdash()"><?php echo getCatalog('purge') ?></button>
-						<?php } ?>
-						<?php
-						$this->widget('zii.widgets.grid.CGridView',
-							array(
-							'dataProvider' => $dataProvideruserdash,
-							'id' => 'userdashList',
-							'selectableRows' => 2,
-							'ajaxUpdate' => true,
-							'filter' => null,
-							'enableSorting' => true,
-							'columns' => array(
-								array(
-									'class' => 'CCheckBoxColumn',
-									'id' => 'ids',
-								),
-								array (
-									'class' => 'CButtonColumn',
-									'template' => '{edit} {purge}',
-									'htmlOptions' => array('style' => 'width:160px'),
-									'buttons' => array (
-										'edit' => array (
-											'label' => getCatalog('edit'),
-											'imageUrl' => Yii::app()->baseUrl.'/images/edit.png',
-											'visible' => booltostr(CheckAccess('jabatan',
-													'iswrite')),
-											'url' => '"#"',
-											'click' => "function() { 
-                        updatedatauserdash($(this).parent().parent().children(':nth-child(3)').text());
-                      }",
-										),
-										'purge' => array (
-											'label' => getCatalog('purge'),
-											'imageUrl' => Yii::app()->baseUrl.'/images/trash.png',
-											'visible' => booltostr(CheckAccess('jabatan',
-													'ispurge')),
-											'url' => '"#"',
-											'click' => "function() { 
-                        purgedatauserdash($(this).parent().parent().children(':nth-child(3)').text());
-                      }",
-										),
-									),
-								),
-								array(
-									'header' => getCatalog('jabatanid'),
-									'name' => 'jabatanid',
-									'value' => '$data["jabatanid"]'
-								),
-								array(
-									'header' => getCatalog('kodejabatan'),
-									'name' => 'kodejabatan',
-									'value' => '$data["kodejabatan"]'
 								),
 								array(
 									'header' => getCatalog('namajabatan'),
@@ -379,50 +323,7 @@
 						));
 						?>
 					</div>		
-				</div>		
-				<div class="card card-primary">
-					<div class="card-header with-border">
-						<h3 class="card-title"><?php echo getCatalog('jabatan') ?></h3>
-						<div class="card-tools pull-right">
-							<button class="btn btn-card-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-						</div>
-					</div><!-- /.card-header -->		
-					<div class="card-body">
-						<?php
-						$this->widget('zii.widgets.grid.CGridView',
-							array(
-							'dataProvider' => $dataProvideruserdash,
-							'id' => 'DetailuserdashList',
-							'ajaxUpdate' => true,
-							'filter' => null,
-							'enableSorting' => true,
-							'columns' => array(
-								array(
-									'header' => getCatalog('jabatanid'),
-									'name' => 'jabatanid',
-									'value' => '$data["jabatanid"]'
-								),
-								array(
-									'header' => getCatalog('kodejabatan'),
-									'name' => 'kodejabatan',
-									'value' => '$data["kodejabatan"]'
-								),
-								array(
-									'header' => getCatalog('namajabatan'),
-									'name' => 'namajabatan',
-									'value' => '$data["namajabatan"]'
-								),
-								array(
-									'header' => getCatalog('jobdesk'),
-									'name' => 'jobdesk',
-									'value' => '$data["jobdesk"]'
-								),
-								
-							)
-						));
-						?>
-					</div>		
-				</div>		
+				</div>			
 			</div>
 		</div>
 	</div>
@@ -435,7 +336,7 @@
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
 			<div class="modal-body">
-				<input type="hidden" class="form-control" name="pesertaid">
+				<input type="hidden" class="form-control" name="divisidetailid">
 				<?php
 				$this->widget('DataPopUp',
 					array('id' => 'Widget', 'IDField' => 'pesertaid', 'ColField' => 'nama',
@@ -444,14 +345,16 @@
 					'classtypebox' => 'col-md-8',
 					'PopUpName' => 'gbacenter.components.views.PesertaPopUp', 'PopGrid' => 'pesertaidgrid'));
 				?>
+				<br>
 				<?php
 				$this->widget('DataPopUp',
-					array('id' => 'Widget', 'IDField' => 'jabatanid', 'ColField' => 'kodejabatan',
+					array('id' => 'Widget', 'IDField' => 'jabatanid', 'ColField' => 'namajabatan',
 					'IDDialog' => 'jabatanid_dialog', 'titledialog' => getCatalog('jabatan'),
 					'classtype' => 'col-md-4',
 					'classtypebox' => 'col-md-8',
 					'PopUpName' => 'gbacenter.components.views.JabatanPopUp', 'PopGrid' => 'jabatanidgrid'));
 				?>
+				<br>
 			<div class="modal-footer">
 				<button type="submit" class="btn btn-success" onclick="savedatapeserta()"><?php echo getCatalog('save') ?></button>
         <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo getCatalog('close') ?></button>

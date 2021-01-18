@@ -5,47 +5,38 @@ class PenilaianhostController extends AdminController {
 	protected $pageTitle			 = 'Penilaianhost';
 	public $wfname						 = '';
 	public $sqldata						 = "select a0.penilaianid,a0.grupbacaid,a0.startdate,a0.enddate, a0.notes,
-	b0.penilaiandetailid, b0.pesertaid, b0.rating, b0.notes,
-	c0.namagrup, d0.nama
+	b0.kodegrup, b0.namagrup
 	from penilaian a0 
-	join penilaiandetail b0 on b0.penilaianid = a0.penilaianid
-	left join grupbaca c0 on c0.grupbacaid = a0.grupbacaid
-	left join peserta d0 on d0.pesertaid = b0.pesertaid
+	left join grupbaca b0 on b0.grupbacaid = a0.grupbacaid
   ";
   
   
-	public $sqldatagroupmenu	 = "select a0.penilaianid,a0.grupbacaid,a0.startdate,a0.enddate, a0.notes,
-	b0.penilaiandetailid, b0.pesertaid, b0.rating, b0.notes notesdetail,
-	c0.namagrup, d0.nama
-	from penilaian a0 
-	join penilaiandetail b0 on b0.penilaianid = a0.penilaianid
-	left join grupbaca c0 on c0.grupbacaid = a0.grupbacaid
-	left join peserta d0 on d0.pesertaid = b0.pesertaid
+	public $sqldatagroupmenu	 = "select
+	a0.penilaiandetailid, a0.penilaianid, a0.pesertaid, a0.rating, a0.notes,
+	b0.nama
+	from penilaiandetail a0 
+	left join peserta b0 on b0.pesertaid = a0.pesertaid
   ";
 
 	public $sqlcount					 = "select count(1) 
 	from penilaian a0 
-	join penilaiandetail b0 on b0.penilaianid = a0.penilaianid
-	left join grupbaca c0 on c0.grupbacaid = a0.grupbacaid
-	left join peserta d0 on d0.pesertaid = b0.pesertaid
+	left join grupbaca b0 on b0.grupbacaid = a0.grupbacaid
   ";
   
 
 	public $sqlcountgroupmenu	 = "select count(1) 
-	from penilaian a0 
-	join penilaiandetail b0 on b0.penilaianid = a0.penilaianid
-	left join grupbaca c0 on c0.grupbacaid = a0.grupbacaid
-	left join peserta d0 on d0.pesertaid = b0.pesertaid
+	from penilaiandetail a0 
+	left join peserta b0 on b0.pesertaid = a0.pesertaid
   ";
 
 	public function getSQL() {
 		$this->count	 = Yii::app()->db->createCommand($this->sqlcount)->queryScalar();
 		$where				 = "";
 		$penilaianid = filterinput(2, 'penilaianid');
+        $kodegrup		 = filterinput(2, 'kodegrup');
         $namagrup		 = filterinput(2, 'namagrup');
-        $nama		 = filterinput(2, 'nama');
-        $where				 .= " where c0.namagrup like '%".$kodegrup."%'
-        and d0.nama like '%".$nama."%'";
+        $where				 .= " where b0.kodegrup like '%".$kodegrup."%'
+        and b0.namagrup like '%".$namagrup."%'";
 		if (($penilaianid !== '0') && ($penilaianid !== '')) {
 			$where .= " and a0.penilaianid in (".$penilaianid.")";
 		}
@@ -65,20 +56,22 @@ class PenilaianhostController extends AdminController {
 			),
 			'sort' => array(
 				'attributes' => array(
-					'penilaianid', 'penilaiandetailid','grupbacaid', 'namagrup', 'nama', 'startdate', 'enddate', 'notes', 'notesdetail','rating'
+					'penilaianid', 'penilaiandetailid','grupbacaid', 'kodegrup', 'namagrup', 'startdate', 'enddate', 'notes'
 				),
 				'defaultOrder' => array(
 					'penilaianid' => CSort::SORT_DESC
 				),
 			),
 		));
-	$penilaianid = filterinput(1, 'penilaianid',FILTER_SANITIZE_NUMBER_INT);
-	
-    if ($penilaianid > 0) {
-      $this->sqlcountgroupmenu .= ' where a0.penilaianid = '.$penilaianid;
-      $this->sqldatagroupmenu	 .= ' where a0.penilaianid = '.$penilaianid;
-    }
+
+
+	if (isset($_REQUEST['penilaianid'])) {
+		$penilaianid = $_REQUEST['penilaianid'];
+		$this->sqlcountgroupmenu .= ' where a0.penilaianid = '.$penilaianid;
+		$this->sqldatagroupmenu	 .= ' where a0.penilaianid = '.$penilaianid;
 		$countgroupmenu				 = Yii::app()->db->createCommand($this->sqlcountgroupmenu)->queryScalar();
+    }
+		
 		$dataProvidergroupmenu = new CSqlDataProvider($this->sqldatagroupmenu,
 			array(
 			'totalItemCount' => $countgroupmenu,
@@ -139,10 +132,11 @@ class PenilaianhostController extends AdminController {
 		if ($id == '') {
 			GetMessage('error', 'chooseone');
 		}
-		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where a0.penilaianid = '.$id)->queryRow();
+		$model = Yii::app()->db->createCommand($this->sqldatagroupmenu.' where a0.penilaiandetailid = '.$id)->queryRow();
 		if ($model !== null) {
 			echo CJSON::encode(array(
 				'status' => 'success',
+				'penilaiandetailid' => $model['penilaiandetailid'],
 				'penilaianid' => $model['penilaianid'],
 				'pesertaid' => $model['pesertaid'],
 				'rating' => $model['rating'],
@@ -161,17 +155,27 @@ class PenilaianhostController extends AdminController {
 			ModifyCommand(1, $this->menuname, 'penilaianid',
 				array(
 				array(':penilaianid', 'penilaianid', PDO::PARAM_STR),
+				array(':actiontype', 'actiontype', PDO::PARAM_STR),
 				array(':grupbacaid', 'grupbacaid', PDO::PARAM_STR),
 				array(':startdate', 'startdate', PDO::PARAM_STR),
 				array(':enddate', 'enddate', PDO::PARAM_STR),
 				array(':notes', 'notes', PDO::PARAM_STR),
+				array(':vcreatedby', 'vcreatedby', PDO::PARAM_STR),
 				),
-				'insert into penilaian (penilaianid,grupbacaid,startdate,enddate,notes)
-				values (:penilaianid,:grupbacaid,:startdate,:enddate,:notes)'
-			  ,
-			   'insert into penilaian (penilaianid,grupbacaid,startdate,enddate,notes)
-				values (:penilaianid,:grupbacaid,:startdate,:enddate,:notes)'
-			  );
+				'call InsertPenilaian (:actiontype
+					,:penilaianid
+					,:grupbacaid
+					,:startdate
+					,:enddate
+					,:notes
+					,:vcreatedby)',
+			    'call InsertPenilaian (:actiontype
+					,:penilaianid
+					,:grupbacaid
+					,:startdate
+					,:enddate
+					,:notes
+					,:vcreatedby)');
 		}
 	}
 	public function actionSavegruppenilaian() {
@@ -186,16 +190,28 @@ class PenilaianhostController extends AdminController {
 			
 			ModifyCommand(1, $this->menuname, 'penilaianid',
 				array(
+				array(':penilaiandetailid', 'penilaiandetailid', PDO::PARAM_STR),
+				array(':actiontype2', 'actiontype2', PDO::PARAM_STR),
                 array(':penilaianid', 'penilaianid', PDO::PARAM_STR),
 				array(':pesertaid', 'pesertaid', PDO::PARAM_STR),
 				array(':rating', 'rating', PDO::PARAM_STR),
 				array(':notes', 'notes', PDO::PARAM_STR),
+				array(':vcreatedby', 'vcreatedby', PDO::PARAM_STR),
 				),
-				'insert into penilaiandetail (penilaianid,pesertaid,rating,notes)
-			      values (:penilaianid,:pesertaid,:rating,:notes)',
-                'update penilaiandetail
-                  set pesertaid = :pesertaid,rating = :rating,notes = :notes
-			      where penilaianid = :penilaianid');
+				'call InsertPenilaianDetail (:actiontype2
+					,:penilaiandetailid
+					,:penilaianid
+					,:pesertaid
+					,:rating
+					,:notes
+					,:vcreatedby)',
+					'call InsertPenilaianDetail (:actiontype2
+					,:penilaiandetailid
+					,:penilaianid
+					,:pesertaid
+					,:rating
+					,:notes
+					,:vcreatedby)');
 				
 		}
 	}
@@ -237,7 +253,7 @@ class PenilaianhostController extends AdminController {
         GetMessage('error', 'chooseone');
       }
       foreach ($ids as $id) {
-        $sql = "delete from penilaiandetailid where penilaianid = ".$id;
+        $sql = "delete from penilaiandetail where penilaianid = ".$id;
         Yii::app()->db->createCommand($sql)->execute();
 	  }
 	  
@@ -280,16 +296,41 @@ class PenilaianhostController extends AdminController {
 		$dataReader = Yii::app()->db->createCommand($this->sqldata)->queryAll();
 		$this->pdf->title					 = getCatalog('grupbaca');
 		$this->pdf->AddPage('L');
-		$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C', 'C', 'C', 'C');
-		$this->pdf->colheader			 = array(getCatalog('penilaianid'), getCatalog('namagrup'),
-			getCatalog('startdate'), getCatalog('enddate'), getCatalog('notes'), getCatalog('nama'), getCatalog('rating'),getCatalog('notesdetail'));
-		$this->pdf->setwidths(array(20, 20, 30, 30, 15, 20, 25, 20));
-		$this->pdf->Rowheader();
-		$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L', 'L', 'L', 'L');
+
 		foreach ($dataReader as $row1) {
+			$this->pdf->sety($this->pdf->gety() + 5);
+			$this->pdf->colalign			 = array('C', 'C', 'C', 'C', 'C');
+			$this->pdf->colheader			 = array(getCatalog('penilaianid'), getCatalog('namagrup'),
+				getCatalog('startdate'), getCatalog('enddate'), getCatalog('notes'));
+			$this->pdf->setwidths(array(20, 60, 30, 30, 80));
+			$this->pdf->Rowheader();
+			$this->pdf->coldetailalign = array('L', 'L', 'L', 'L', 'L');
 			$this->pdf->row(array($row1['penilaianid'], $row1['namagrup'], $row1['startdate'],$row1['enddate'],
-			$row1['notes'],$row1['nama'],$row1['rating'],$row1['notesdetail']));
+			$row1['notes']));
+
+				$sql2 = "select a0.penilaiandetailid,a0.penilaianid,a0.rating,a0.notes,
+				b0.aliasid, b0.nama
+				from penilaiandetail a0 
+				left join peserta b0 on b0.pesertaid = a0.pesertaid
+				where penilaianid = ".$row1['penilaianid'];
+				$dataReader2 = Yii::app()->db->createCommand($sql2)->queryAll();
+				$this->pdf->sety($this->pdf->gety() + 7);
+				$this->pdf->colalign			 = array('C', 'C', 'C', 'C');
+				$this->pdf->colheader			 = array(getCatalog('aliasid'), getCatalog('nama'), getCatalog('rating')
+				, getCatalog('notes'));
+				$this->pdf->setwidths(array(30, 50, 30, 80));
+				$this->pdf->Rowheader();
+				$this->pdf->coldetailalign = array('L', 'L', 'L', 'L');
+				foreach ($dataReader2 as $row2) {
+					$this->pdf->row(array($row2['aliasid'],$row2['nama'],$row2['rating'],$row2['notes']));
+				}	
+				
 		}
+
+
 		$this->pdf->Output();
 	}
+
+	
+
 }

@@ -30,12 +30,23 @@ define('PICTURE_ANGEL','😇');
 define('PICTURE_GOOD_JOB','👍');
 define('PICTURE_SMILE','😊');
 define('PICTURE_SMILE_TEETH','😁');
+define('PICTURE_1','1⃣');
+define('PICTURE_2','2⃣');
+define('PICTURE_3','3⃣');
+define('PICTURE_4','4⃣');
+define('PICTURE_5','5⃣');
+define('PICTURE_6','6⃣');
+define('PICTURE_7','7⃣');
+define('PICTURE_8','8⃣');
+define('PICTURE_9','9⃣');
+define('PICTURE_10','🔟');
 
 define('ARRAY_KEY_FC_LOWERCASE', 25); //FOO => fOO
 define('ARRAY_KEY_FC_UPPERCASE', 20); //foo => Foo
 define('ARRAY_KEY_UPPERCASE', 15); //foo => FOO
 define('ARRAY_KEY_LOWERCASE', 10); //FOO => foo
 define('ARRAY_KEY_USE_MULTIBYTE', true); //use mutlibyte functions
+
 /**
  * Function for Input Filtering from POST, GET, or Ordinary Variable
  * @param type $datatype
@@ -67,9 +78,13 @@ function filterinput($datatype, $var='', $varfilter = FILTER_SANITIZE_STRING) {
     case 4:
       $retvars = $_POST[$var];
       $retvar = array();
-      foreach ($retvars as $i) {
-        $s = filter_var($i, $varfilter);
-        array_push($retvar, $s);
+      if (is_array($retvars)) {
+        foreach ($retvars as $i) {
+          $s = filter_var($i, $varfilter);
+          array_push($retvar, $s);
+        }
+      } else {
+        array_push($retvar,$retvars);
       }
       break;
 		default:
@@ -1284,17 +1299,7 @@ function apiRequest($telegramurl,$telegramkey,$method, $parameters) {
   curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, Yii::app()->params['ConnectTimeOut']);
   curl_setopt($handle, CURLOPT_TIMEOUT, Yii::app()->params['TimeOut']);
-  $result = exec_curl_request($handle);
-  if (curl_errno($handle)) {
-    $error_msg = curl_error($handle); 
-  }
-  curl_close($handle);
-  if (isset($error_msg)) {
-    WriteTelegramLog($error_msg);
-    return $error_msg;
-  } else {
-    return $result ;
-  }
+  return exec_curl_request($handle);
 }
 function apiRequestGetFile($telegramurl,$telegramkey,$fileid) {
   if (!is_string($fileid)) {
@@ -1335,112 +1340,108 @@ function apiRequestJson($telegramurl,$telegramkey,$method, $parameters) {
   return exec_curl_request($handle);
 }
 function chatReply($param,$telegramurl,$telegramkey,$message) {
-  try {
-    $message_id = $message['message_id'];
-    $chatid = $message['chat']['id'];
-    $firstusertelegram = $message['from']['first_name'];
-    $lastusertelegram = $message['from']['last_name'];
-    $usertelegram = $message['from']['username'];
-    $telegramid = $message['from']['id'];
-    $reply = 'Maaf, saya tidak mengetahui maksud perintah anda. Coba saya tanyakan ke bagian IT terlebih dahulu';
-    if (substr($param[0],0,1) == '/') {
-      $param[0] = substr($param[0],1,strlen($param[0])-1);
-    } 
-    $sql = "select ifnull(count(1),0) 
+  $message_id = $message['message_id'];
+  $chatid = $message['chat']['id'];
+  $firstusertelegram = $message['from']['first_name'];
+  $lastusertelegram = $message['from']['last_name'];
+  $usertelegram = $message['from']['username'];
+  $telegramid = $message['from']['id'];
+  $reply = 'Maaf, saya tidak mengetahui maksud perintah anda. Coba saya tanyakan ke bagian IT terlebih dahulu';
+  if (substr($param[0],0,1) == '/') {
+    $param[0] = substr($param[0],1,strlen($param[0])-1);
+  } 
+  $sql = "select ifnull(count(1),0) 
+    from chat 
+    where coalesce(msgfrom,'') = '".$param[0]."'";
+  $k = Yii::app()->db->createCommand($sql)->queryScalar();
+  if ($k > 0) {
+    $sql = "select chatid, msgresponid,ifnull(msgparam,'')
       from chat 
-      where coalesce(msgfrom,'') = '".$param[0]."'";
-    $k = Yii::app()->db->createCommand($sql)->queryScalar();
-    if ($k > 0) {
-      $sql = "select chatid, msgresponid,ifnull(msgparam,'')
-        from chat 
-        where coalesce(msgfrom,'') = '".$param[0]."'
-        limit 1";
-      $datachat = Yii::app()->db->createCommand($sql)->queryRow();
-      $sql = "
-        select ifnull(msgreply,'') as msgreply,ifnull(sourcedata,'') as sourcedata
-        from chatrespon 
-        where chatresponid = ".$datachat['msgresponid'];
-      $chatrespon = Yii::app()->db->createCommand($sql)->queryRow();   
-      if ($chatrespon['msgreply'] != 'content') {
-        $chatrespon['msgreply'] = str_replace('[usertelegram]',$usertelegram,$chatrespon['msgreply']);
-        $chatrespon['msgreply'] = str_replace('[telegramid]',$telegramid,$chatrespon['msgreply']);
-        $chatrespon['msgreply'] = str_replace('[firstusertelegram]',$firstusertelegram,$chatrespon['msgreply']);
-        $chatrespon['msgreply'] = str_replace('[lastusertelegram]',$lastusertelegram,$chatrespon['msgreply']);
-        if (count($param) > 0) {
-          $chatrespon['msgreply'] = str_replace('[id]',$param[1],$chatrespon['msgreply']);
-          $chatrespon['msgreply'] = str_replace('[data]',$param[1],$chatrespon['msgreply']);
-        }
+      where coalesce(msgfrom,'') = '".$param[0]."'
+      limit 1";
+    $datachat = Yii::app()->db->createCommand($sql)->queryRow();
+    $sql = "
+      select ifnull(msgreply,'') as msgreply,ifnull(sourcedata,'') as sourcedata
+      from chatrespon 
+      where chatresponid = ".$datachat['msgresponid'];
+    $chatrespon = Yii::app()->db->createCommand($sql)->queryRow();   
+    if ($chatrespon['msgreply'] != 'content') {
+      $chatrespon['msgreply'] = str_replace('[usertelegram]',$usertelegram,$chatrespon['msgreply']);
+      $chatrespon['msgreply'] = str_replace('[telegramid]',$telegramid,$chatrespon['msgreply']);
+      $chatrespon['msgreply'] = str_replace('[firstusertelegram]',$firstusertelegram,$chatrespon['msgreply']);
+      $chatrespon['msgreply'] = str_replace('[lastusertelegram]',$lastusertelegram,$chatrespon['msgreply']);
+      if (count($param) > 0) {
+        $chatrespon['msgreply'] = str_replace('[id]',$param[1],$chatrespon['msgreply']);
+        $chatrespon['msgreply'] = str_replace('[data]',$param[1],$chatrespon['msgreply']);
+      }
+    }
+
+    if ($chatrespon['sourcedata'] != '') {
+      $chatrespon['sourcedata'] = str_replace('[usertelegram]',$usertelegram,$chatrespon['sourcedata']);
+      $chatrespon['sourcedata'] = str_replace('[telegramid]',$telegramid,$chatrespon['sourcedata']);
+      $chatrespon['sourcedata'] = str_replace('[firstusertelegram]',$firstusertelegram,$chatrespon['sourcedata']);
+      $chatrespon['sourcedata'] = str_replace('[lastusertelegram]',$lastusertelegram,$chatrespon['sourcedata']);
+      if (count($param) > 0) {
+        $chatrespon['sourcedata'] = str_replace('[id]',$param[1], $chatrespon['sourcedata']);
+        $chatrespon['sourcedata'] = str_replace('[data]',$param[1], $chatrespon['sourcedata']);
       }
 
-      if ($chatrespon['sourcedata'] != '') {
-        $chatrespon['sourcedata'] = str_replace('[usertelegram]',$usertelegram,$chatrespon['sourcedata']);
-        $chatrespon['sourcedata'] = str_replace('[telegramid]',$telegramid,$chatrespon['sourcedata']);
-        $chatrespon['sourcedata'] = str_replace('[firstusertelegram]',$firstusertelegram,$chatrespon['sourcedata']);
-        $chatrespon['sourcedata'] = str_replace('[lastusertelegram]',$lastusertelegram,$chatrespon['sourcedata']);
-        if (count($param) > 0) {
-          $chatrespon['sourcedata'] = str_replace('[id]',$param[1], $chatrespon['sourcedata']);
-          $chatrespon['sourcedata'] = str_replace('[data]',$param[1], $chatrespon['sourcedata']);
-        }
+      $commsource = substr($chatrespon['sourcedata'],0,4);
+      if ($commsource == 'http') {
+        $data = [
+          'username'=>$usertelegram,
+          'firstusertelegram'=>$firstusertelegram,
+          'lastusertelegram'=>$lastusertelegram,
+          'telegramid'=>$telegramid,
+          'data'=>$param[1]
+        ];
+        $query = http_build_query($data);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $chatrespon['sourcedata']);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $commsource = substr($chatrespon['sourcedata'],0,4);
-        if ($commsource == 'http') {
-          $data = [
-            'username'=>$usertelegram,
-            'firstusertelegram'=>$firstusertelegram,
-            'lastusertelegram'=>$lastusertelegram,
-            'telegramid'=>$telegramid,
-            'data'=>$param[1]
-          ];
-          $query = http_build_query($data);
-          $ch = curl_init();
-          curl_setopt($ch, CURLOPT_URL, $chatrespon['sourcedata']);
-          curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-          curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
-          curl_setopt($ch, CURLOPT_HEADER, 0);
-          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-          $chatrespon['msgreply'] = curl_exec($ch);
-          curl_close($ch);
-        } else {
-          $sql = $chatrespon['sourcedata'];
-          $dataku = Yii::app()->db->createCommand($sql)->queryAll();
-          $s = '';
-          if (strpos($chatrespon['msgreply'],'[list]') !== FALSE) {
-            foreach ($dataku as $data) {
-              $keys = array_keys($data);
-              foreach ($keys as $key) {
-                $s .= $key.' : '.$data[$key]. "\n";
-              }
+        $chatrespon['msgreply'] = curl_exec($ch);
+        curl_close($ch);
+      } else {
+        $sql = $chatrespon['sourcedata'];
+        $dataku = Yii::app()->db->createCommand($sql)->queryAll();
+        $s = '';
+        if (strpos($chatrespon['msgreply'],'[list]') !== FALSE) {
+          foreach ($dataku as $data) {
+            $keys = array_keys($data);
+            foreach ($keys as $key) {
+              $s .= $key.' : '.$data[$key]. "\n";
             }
-            $chatrespon['msgreply'] = str_replace('[list]',$s,$chatrespon['msgreply']);
-          } else {
-            foreach ($dataku as $data) {
-              $keys = array_keys($data);
-              foreach ($keys as $key) {
-                $chatrespon['msgreply'] = str_replace($key,$data[$key],$chatrespon['msgreply']);
-              }
+          }
+          $chatrespon['msgreply'] = str_replace('[list]',$s,$chatrespon['msgreply']);
+        } else {
+          foreach ($dataku as $data) {
+            $keys = array_keys($data);
+            foreach ($keys as $key) {
+              $chatrespon['msgreply'] = str_replace($key,$data[$key],$chatrespon['msgreply']);
             }
           }
         }
       }
-
-      $reply = $chatrespon['msgreply'];
-      $reply = str_replace(']','',str_replace('[','',$reply));
-    } else {
-      $reply = 'Maaf ya, perintah tidak dikenal. Nanti saya tanyakan lagi ke Administrator';
     }
-    apiRequest($telegramurl,$telegramkey,"sendMessage", array('chat_id' => $chatid, "text" => $reply, 'parse_mode'=>'html'));
-  } catch (Exception $ex) {
-    WriteTelegramLog($ex->getMessage());
+
+    $reply = $chatrespon['msgreply'];
+    $reply = str_replace(']','',str_replace('[','',$reply));
+  } else {
+    $reply = 'Maaf ya, perintah tidak dikenal. Nanti saya tanyakan lagi ke Administrator';
   }
+  WriteTelegramLog($reply);
+  apiRequest($telegramurl,$telegramkey,"sendMessage", array('chat_id' => $chatid, "text" => $reply, 'parse_mode'=>'html'));
 }
-function insertLogChat($grupbaca,$caption,$text,$usertelegram) {
+function insertLogChat($grupbaca,$text,$usertelegram) {
   try {
-    $sql = "insert into logchat (grupbaca,caption,logtext,idtelegram) 
-      values (:grupbaca,:caption,:logtext,:idtelegram)";
+    $sql = "insert into logchat (grupbaca,logtext,idtelegram) 
+      values (:grupbaca,:logtext,:idtelegram)";
     $command = Yii::app()->db->createCommand($sql);
     $command->bindvalue(':grupbaca', $grupbaca, PDO::PARAM_STR);
-    $command->bindvalue(':caption', $caption, PDO::PARAM_STR);
     $command->bindvalue(':logtext', $text, PDO::PARAM_STR);
     $command->bindvalue(':idtelegram', $usertelegram, PDO::PARAM_STR);
     $command->execute();
@@ -1449,6 +1450,7 @@ function insertLogChat($grupbaca,$caption,$text,$usertelegram) {
   }
   catch (Exception $ex) {
     WriteTelegramLog($ex->getMessage());
+    return 0;
   }
 }
 function isDate($value) {
@@ -1474,7 +1476,7 @@ function getStringBetween($string, $start, $end){
 function processMessage($telegramurl,$telegramkey,$message) {
   //task
   //cek di peserta - divisi - jabatan, istelegram = 1
-  ini_set('memory_limit', '128M');
+  ini_set('memory_limit', '-1');
   $message_id = $message['message_id'];
   $chatid = $message['chat']['id'];
   $firstusertelegram = $message['from']['first_name'];
@@ -1504,59 +1506,55 @@ function processMessage($telegramurl,$telegramkey,$message) {
         chatReply($param,$telegramurl,$telegramkey,$message);  
       } else
       if (isset($message['document'])) {
-          if (isset($message['caption'])) {
-          $grupbaca = str_replace('Chat WhatsApp dengan ','',$message['document']['file_name']);
-          $grupbaca = str_replace('WhatsApp Chat - ','',$message['document']['file_name']);
-          $extfile = pathinfo($message['document']['file_name'], PATHINFO_EXTENSION);
-          $grupbaca = str_replace('/','',$grupbaca);
-          $grupbaca = str_replace('_','',$grupbaca);
-          $grupbaca = str_replace('.zip','',$grupbaca);
-          $caption = str_replace('kirimchat ','',$message['caption']);
-          $sql = "
-            select ifnull(count(1),0)
-            from peserta a 
-            join divisidetail b on b.pesertaid = a.pesertaid 
-            join jabatan c on c.jabatanid = b.jabatanid 
-            join grupbaca d on d.divisiid = b.divisiid 
-            where a.idtelegram = '".$usertelegram."' 
-            and c.istelegram = 1 
-            and a.recordstatus = 1 
-            and c.recordstatus = 1
-            and d.namagrup = '".$grupbaca."'
-          ";
-          $k = Yii::app()->db->createCommand($sql)->queryScalar();
-          if ($k > 0) {
-            $fileid = $message['document']['file_id'];
-            if ($extfile == 'zip') {
-              $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$message['document']['file_name'];
-            } else {
-              $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca;
-            }
-            $content = apiRequestGetFile($telegramurl,$telegramkey,$fileid);
-
-            $url = Yii::app()->params['TelegramFileUrl'].$telegramkey.'/'.$content['file_path'];
-            file_put_contents($filename, file_get_contents($url));
-
-            if ($extfile == 'zip') {
-              $zip = new ZipArchive;
-              $res = $zip->open($filename);
-              if ($res === TRUE) {
-                $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca."/_chat.txt";
-                $zip->extractTo($_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca);
-                $zip->close();
-              }
-            }
-            $id = insertLogChat($grupbaca,$caption,$filename,$usertelegram);
-
-            $param = ['replyfile',$id];
-            chatReply($param,$telegramurl,$telegramkey,$message);
-
+        $extfile = pathinfo($message['document']['file_name'], PATHINFO_EXTENSION);
+        $grupbaca = str_replace('Chat WhatsApp dengan ','',$message['document']['file_name']);
+        $grupbaca = str_replace('WhatsApp Chat - ','',$grupbaca);
+        $grupbaca = str_replace('WhatsApp Chat with ','',$grupbaca);
+        $grupbaca = str_replace('/','',$grupbaca);
+        $grupbaca = str_replace('_','',$grupbaca);
+        $grupbaca = str_replace('.zip','',$grupbaca);
+        $grupbaca = str_replace('.txt','',$grupbaca);
+        $sql = "
+          select ifnull(count(1),0)
+          from peserta a 
+          join divisidetail b on b.pesertaid = a.pesertaid 
+          join jabatan c on c.jabatanid = b.jabatanid 
+          join grupbaca d on d.divisiid = b.divisiid 
+          where a.idtelegram = '".$usertelegram."' 
+          and c.istelegram = 1 
+          and a.recordstatus = 1 
+          and c.recordstatus = 1
+          and d.namagrup = '".$grupbaca."'
+        ";
+        $k = Yii::app()->db->createCommand($sql)->queryScalar();
+        if ($k > 0) {
+          $fileid = $message['document']['file_id'];
+          if ($extfile == 'zip') {
+            $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$message['document']['file_name'];
           } else {
-            $param = ['youarenotgrupbaca'];
-            chatReply($param,$telegramurl,$telegramkey,$message);
+            $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca;
           }
+          $content = apiRequestGetFile($telegramurl,$telegramkey,$fileid);
+
+          $url = Yii::app()->params['TelegramFileUrl'].$telegramkey.'/'.$content['file_path'];
+          file_put_contents($filename, file_get_contents($url));
+          if ($extfile == 'zip') {
+            $zip = new ZipArchive;
+            $res = $zip->open($filename);
+            if ($res === TRUE) {
+              $zip->extractTo($_SERVER['DOCUMENT_ROOT'].'/uploads/');
+              $zip->close();
+              rename($_SERVER['DOCUMENT_ROOT'].'/uploads/_chat.txt',$_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca.'.txt');
+              $filename = $_SERVER['DOCUMENT_ROOT'].'/uploads/'.$grupbaca.'.txt';
+            }
+          }
+          $id = insertLogChat($grupbaca,$filename,$usertelegram);
+
+          $param = ['replyfile',$id];
+          chatReply($param,$telegramurl,$telegramkey,$message);
+
         } else {
-          $param = ['sendchaterror'];
+          $param = ['youarenotgrupbaca'];
           chatReply($param,$telegramurl,$telegramkey,$message);
         }
       } else {

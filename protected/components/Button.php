@@ -7,6 +7,7 @@ class Button extends Portlet {
   public $isreject = true;
   public $isupload = true;
   public $isdownload = true;
+  public $uploadurl = '';
   protected function renderContent() {
 		$this->render('button');
 	}

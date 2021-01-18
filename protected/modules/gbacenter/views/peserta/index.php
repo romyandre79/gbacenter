@@ -5,10 +5,8 @@
 		<h3 class="card-title"><?php echo getCatalog('peserta') ?></h3>
 	</div>
 	<div class="card-body">
-	<a href="pesertaimport" class="btn btn-sm btn-success">Import Data</a>
-	
-	<br><br>
-    <?php $this->widget('Button',	array('menuname'=>'peserta')); ?>
+    <?php $this->widget('Button',	array('menuname'=>'peserta','uploadurl'=>'gbacenter/peserta/uploaddata')); ?>
+	<br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -107,18 +105,18 @@
 				),
 				array(
 					'header' => getCatalog('kota'),
-					'name' => 'kota',
-					'value' => '$data["kota"]'
+					'name' => 'namakota',
+					'value' => '$data["namakota"]'
 				),
 				array(
 					'header' => getCatalog('provinsi'),
-					'name' => 'provinsi',
-					'value' => '$data["provinsi"]'
+					'name' => 'namaprovinsi',
+					'value' => '$data["namaprovinsi"]'
 				),
 				array(
 					'header' => getCatalog('negara'),
-					'name' => 'negara',
-					'value' => '$data["negara"]'
+					'name' => 'namanegara',
+					'value' => '$data["namanegara"]'
 				),
 				array(
 					'header' => getCatalog('asalgereja'),
@@ -170,13 +168,14 @@
 			)
 		));
 		?>
+		<br>
     <?php $this->widget('Button',	array('menuname'=>'peserta')); ?>
 	</div>
 </div>
 <?php $this->widget('SearchPopUp',array('searchitems'=>array(
   array('searchtype'=>'text','searchname'=>'nama'),
   array('searchtype'=>'text','searchname'=>'aliasid'),
-  array('searchtype'=>'text','searchname'=>'idtelegram')
+  array('searchtype'=>'text','searchname'=>'nohp')
 ))); ?>
 <?php $this->widget('HelpPopUp',array('helpurl'=>'https://www.youtube.com/embed/BelvIaMxKag')); ?>
 <div id="InputDialog" class="modal fade" role="dialog">
@@ -192,102 +191,101 @@
 		
         <div class="row">
 					<div class="col-md-4">
-						<label for="idtelegram">ID Telegram</label>
+						<label for="idtelegram"><?php echo getCatalog('idtelegram'); ?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="idtelegram">
 					</div>
-				</div>
+				</div><br>
         <div class="row">
 					<div class="col-md-4">
-						<label for="nohp">HandPhone</label>
+						<label for="nohp"><?php echo getCatalog('nohp'); ?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="nohp">
 					</div>
-				</div>
-		
-<div class="row">
+		</div> <br>
+		<div class="row">
 					<div class="col-md-4">
-						<label for="nama">Nama Lengkap </label>
+						<label for="nama"><?php echo getCatalog('nama'); ?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="nama">
 					</div>
-		</div>		
+		</div><br>		
 		<div class="row">
                 <div class="col-md-4">
-                    <label for="aliasid">Alias</label>
+                    <label for="aliasid"><?php echo getCatalog('aliasid'); ?></label>
                 </div>
                 <div class="col-md-8">
 				<input type="text" class="form-control" name="aliasid">
                 </div>
-        </div> 
-<div class="row">
+        </div><br> 
+		<div class="row">
                 <div class="col-md-4">
-                    <label for="alamat">Alamat</label>
+                    <label for="alamat"><?php echo getCatalog('alamat'); ?></label>
                 </div>
                 <div class="col-md-8">
 				<input type="text" class="form-control" name="alamat">
                 </div>
-        </div> 
+        </div><br> 
+		<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'kota', 'ColField' => 'namakota',
+					'IDDialog' => 'kota_dialog', 'titledialog' => 'Kota',
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'admin.components.views.CityPopUp', 'PopGrid' => 'kota'));
+		?><br> 
+		<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'provinsi', 'ColField' => 'namaprovinsi',
+					'IDDialog' => 'provinsi_dialog', 'titledialog' => 'Provinsi',
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'admin.components.views.ProvincePopUp', 'PopGrid' => 'provinsi'));
+		?><br> 
+		<?php
+				$this->widget('DataPopUp',
+					array('id' => 'Widget', 'IDField' => 'negara', 'ColField' => 'namanegara',
+					'IDDialog' => 'negara_dialog', 'titledialog' => 'Negara',
+					'classtype' => 'col-md-4',
+					'classtypebox' => 'col-md-8',
+					'PopUpName' => 'admin.components.views.CountryPopUp', 'PopGrid' => 'negara'));
+		?><br> 
 		<div class="row">
                 <div class="col-md-4">
-                    <label for="kota">Kota</label>
-                </div>
-                <div class="col-md-8">
-				<input type="text" class="form-control" name="kota">
-                </div>
-        </div> 
-		<div class="row">
-                <div class="col-md-4">
-                    <label for="provinsi">Provinsi</label>
-                </div>
-                <div class="col-md-8">
-				<input type="text" class="form-control" name="provinsi">
-                </div>
-        </div> 
-		<div class="row">
-                <div class="col-md-4">
-                    <label for="negara">Negara</label>
-                </div>
-                <div class="col-md-8">
-				<input type="text" class="form-control" name="negara">
-                </div>
-        </div> 
-		<div class="row">
-                <div class="col-md-4">
-                    <label for="asalgereja">Asal Gereja</label>
+                    <label for="asalgereja"><?php echo getCatalog('asalgereja'); ?></label>
                 </div>
                 <div class="col-md-8">
 				<input type="text" class="form-control" name="asalgereja">
                 </div>
-        </div> 
+        </div><br> 
 		<div class="row">
                 <div class="col-md-4">
-                    <label for="jabatangereja">Jabatan Gereja</label>
+                    <label for="jabatangereja"><?php echo getCatalog('jabatangereja'); ?></label>
                 </div>
                 <div class="col-md-8">
 				<input type="text" class="form-control" name="jabatangereja">
                 </div>
-        </div> 
+        </div><br> 
 		<div class="row">
                 <div class="col-md-4">
-                    <label for="tgllahir">Tanggal Lahir</label>
+                    <label for="tgllahir"><?php echo getCatalog('tgllahir'); ?></label>
                 </div>
                 <div class="col-md-8">
 				<input type="date" name="tgllahir" class="form-control">
                 </div>
-        </div> 
+        </div><br> 
 		<div class="row">
                 <div class="col-md-4">
-                    <label for="sexid">Jenis Kelamin</label>
+                    <label for="sexid"><?php echo getCatalog('sexid'); ?></label>
                 </div>
                 <div class="col-md-8">
-					<input type="radio" name="sexid" value="1"> Laki
-					&nbsp;&nbsp;&nbsp;<input type="radio" name="sexid" value="0"> Perempuan
+					<input type="radio" id="sexidl" name="sexid" value="L"> Laki
+					&nbsp;&nbsp;&nbsp;<input type="radio" id="sexidp" name="sexid" value="P"> Perempuan
                 </div>
-        </div> 
+        </div><br> 
 		<div class="row">
                 <div class="col-md-4">
                     <label for="statusbaca"><?php echo getCatalog('statusbaca') ?></label>
@@ -295,15 +293,15 @@
                 <div class="col-md-8">
                     <input type="checkbox" name="statusbaca">
                 </div>
-        </div> 
+        </div><br> 
 		<div class="row">
 					<div class="col-md-4">
-						<label for="foto">Foto</label>
+						<label for="foto"><?php echo getCatalog('foto'); ?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="foto">
 					</div>
-        </div>  
+        </div>
 		<div class="row">
 					<div class="col-md-4"></div>
 					<div class="col-md-8">
@@ -319,31 +317,31 @@
 						$this->widget('ext.dropzone.EDropzone',
 							array(
 							'name' => 'upload',
-							'url' => Yii::app()->createUrl('images/peserta'),
+							'url' => Yii::app()->createUrl('gbacenter/peserta/upload'),
 							'mimeTypes' => array('.jpg', '.png', '.jpeg'),
 							'events' => $events,
 							'options' => CMap::mergeArray($this->options, $this->dict),
 							'htmlOptions' => array('style' => 'height:95%; overflow: hidden;'),
 						));
 						?>
-          </div> 
-		</div>  
+          </div>
+		</div><br>   
 		<div class="row">
 					<div class="col-md-4">
-						<label for="kontak">Kontak</label>
+						<label for="kontak"><?php echo getCatalog('kontak'); ?></label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="kontak">
 					</div>
-        </div> 
+        </div><br> 
 		<div class="row">
 					<div class="col-md-4">
-						<label for="note">Notes</label>
+						<label for="note"><?php echo getCatalog('note'); ?></label>
 					</div>
 					<div class="col-md-8">
-						<input type="text" class="form-control" name="note">
+						<textarea type="text" class="form-control" rows="5" name="note"></textarea>
 					</div>
-        </div> 
+        </div><br> 
         <div class="row">
                 <div class="col-md-4">
                     <label for="recordstatus"><?php echo getCatalog('recordstatus') ?></label>
@@ -351,7 +349,7 @@
                 <div class="col-md-8">
                     <input type="checkbox" name="recordstatus">
                 </div>
-        </div>       
+        </div><br>       
       </div>
     
         

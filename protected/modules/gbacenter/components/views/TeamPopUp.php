@@ -99,7 +99,7 @@ $product = new CSqlDataProvider($sqldata,
 							</span>
 						</div>
 					</div>
-				</div>			
+				</div><br>			
 				<div class="row">
 					<div class="col-md-4">
 						<label class="control-label" for="<?php echo $this->IDField; ?>_search_namateam">Nama Team</label>
@@ -109,7 +109,7 @@ $product = new CSqlDataProvider($sqldata,
 							<input type="text" name="<?php echo $this->IDField; ?>_search_namateam" class="form-control">
 						</div>
 					</div>
-				</div>
+				</div><br>
 				<?php
 				$this->widget('zii.widgets.grid.CGridView',
 					array(

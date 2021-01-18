@@ -119,6 +119,35 @@ class JabatanController extends AdminController {
 			getMessage('error', $e->getMessage());
 		}
 	}
+
+	public function actionDelete() {
+		parent::actionDelete();
+		$connection	 = Yii::app()->db;
+		$transaction = $connection->beginTransaction();
+		try {
+		$ids = filterinput(4,'id');
+		if ($ids == '') {
+			GetMessage('error', 'chooseone');
+		}
+		foreach ($ids as $id) {
+			$sql		 = "select recordstatus from jabatan where jabatanid = ".$id;
+			$status	 = Yii::app()->db->createCommand($sql)->queryRow();
+			if ($status['recordstatus'] == 1) {
+			$sql = "update jabatan set recordstatus = 0 where jabatanid = ".$id;
+			} else
+			if ($status['recordstatus'] == 0) {
+			$sql = "update jabatan set recordstatus = 1 where jabatanid = ".$id;
+			}
+			$connection->createCommand($sql)->execute();
+      	}
+		$transaction->commit();
+		getMessage('success', 'alreadysaved');
+			} catch (CDbException $e) {
+				$transaction->rollback();
+				getMessage('error', $e->getMessage());
+			}
+	}
+
 	public function actionDownPDF() {
 		parent::actionDownPDF();
 		$this->getSQL();

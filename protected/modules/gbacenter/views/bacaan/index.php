@@ -5,7 +5,7 @@
 		<h3 class="card-title"><?php echo getCatalog('bacaan') ?></h3>
 			</div>
 	<div class="card-body">
-    <?php $this->widget('Button',	array('menuname'=>'bacaan')); ?>
+    <?php $this->widget('Button',	array('menuname'=>'bacaan')); ?><br>
 		<?php
 		$this->widget('zii.widgets.grid.CGridView',
 			array(
@@ -135,7 +135,7 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="kodebuku">
 					</div>
-				</div>
+				</div><br>
         <div class="row">
 					<div class="col-md-4">
 						<label for="namabuku">Nama Buku</label>
@@ -143,31 +143,31 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="namabuku">
 					</div>
-				</div>
+				</div><br>
 		<div class="row">
 					<div class="col-md-4">
-						<label for="jumlah">Jumlah</label>
+						<label for="jumlah">Jumlah Pasal</label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="jumlah">
 					</div>
-				</div>
+				</div><br>
 		<div class="row">
 					<div class="col-md-4">
-						<label for="total">Total</label>
+						<label for="total">Total Hari Bacaan</label>
 					</div>
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="total">
 					</div>
-				</div>					
+				</div><br>					
 		<div class="row">
 					<div class="col-md-4">
 						<label for="notes">Notes</label>
 					</div>
 					<div class="col-md-8">
-						<input type="text" class="form-control" name="notes">
+					<textarea type="text" class="form-control" rows="5" name="notes"></textarea>
 					</div>
-				</div>		
+				</div><br>		
         <div class="row">
 					<div class="col-md-4">
 						<label for="recordstatus"><?php echo getCatalog('recordstatus') ?></label>
@@ -175,19 +175,38 @@
 					<div class="col-md-8">
 						<input type="checkbox" name="recordstatus">
 					</div>
-				</div>
-				<ul class="nav nav-pills nav-fill">
+				</div><br>
+				<ul class="nav nav-tabs" role="tablist">
 					<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#bacaan">Menu Harian</a></li>
-					<!--<li class="nav-item"><a data-toggle="tab" class="nav-link" href="#jabatan"><?php echo getCatalog("bacaan") ?></a></li>-->
-				</ul>
+				</ul><br>
 				<div class="tab-content">
 					<div id="bacaan" class="tab-pane">
 						<?php if (CheckAccess('bacaan', 'iswrite')) { ?>
-							<button name="CreateButtongroupmenu" type="button" class="btn btn-primary" onclick="newdatapeserta()"><?php echo getCatalog('new') ?></button>
+							<!--<button name="CreateButtongroupmenu" type="button" class="btn btn-primary" onclick="newdatapeserta()"><?php echo getCatalog('new') ?></button>-->
 						<?php } ?>
-						<?php if (CheckAccess('peserta', 'ispurge')) { ?>
+						<?php if (CheckAccess('bacaan', 'ispurge')) { ?>
 							<button name="PurgeButtongroupmenu" type="button" class="btn btn-danger" onclick="purgedatagroupmenu()"><?php echo getCatalog('purge') ?></button>
 						<?php } ?>
+            <script>
+							function successUp(param, param2, param3) {
+								toastr.info(param2);
+								$.fn.yiiGridView.update("groupmenuList");
+							}
+						</script>
+						<?php
+							$this->widget('ext.dropzone.EDropzone',
+								array(
+								'name' => 'upload',
+								'url' => Yii::app()->createUrl('gbacenter/bacaan/uploaddetail'),
+								'mimeTypes' => array('.xlsx'),
+								'options' => CMap::mergeArray($this->options, $this->dict),
+								'events' => array(
+                  'success' => 'successUp(param,param2,param3)',
+                  'sending' => "param3.append('grupbacaid',$('input[name=bukubacaanid]').val())"
+								),
+								'htmlOptions' => array('style' => 'height:95%; overflow: hidden;'),
+							));
+						?>
 						<?php
 						$this->widget('zii.widgets.grid.CGridView',
 							array(
@@ -230,9 +249,9 @@
 									),
 								),
 								array(
-									'header' => getCatalog('bukubacaanid'),
-									'name' => 'bukubacaanid',
-									'value' => '$data["bukubacaanid"]'
+									'header' => getCatalog('bukubacaandetailid'),
+									'name' => 'bukubacaandetailid',
+									'value' => '$data["bukubacaandetailid"]'
 								),
 								array(
 									'header' => 'Hari',
@@ -288,34 +307,24 @@
 							'enableSorting' => true,
 							'columns' => array(
 								array(
-									'header' => getCatalog('bukubacaanid'),
-									'name' => 'bukubacaanid',
-									'value' => '$data["bukubacaanid"]'
+									'header' => getCatalog('bukubacaandetailid'),
+									'name' => 'bukubacaandetailid',
+									'value' => '$data["bukubacaandetailid"]'
 								),
 								array(
-									'header' => getCatalog('kodebuku'),
-									'name' => 'kodebuku',
-									'value' => '$data["kodebuku"]'
+									'header' => getCatalog('hari'),
+									'name' => 'hari',
+									'value' => '$data["hari"]'
 								),
 								array(
-									'header' => getCatalog('namabuku'),
-									'name' => 'namabuku',
-									'value' => '$data["namabuku"]'
+									'header' => getCatalog('menuharian'),
+									'name' => 'menuharian',
+									'value' => '$data["menuharian"]'
 								),
 								array(
-									'header' => getCatalog('jumlah'),
-									'name' => 'jumlah',
-									'value' => '$data["jumlah"]'
-								),
-								array(
-									'header' => getCatalog('total'),
-									'name' => 'total',
-									'value' => '$data["total"]'
-								),
-								array(
-									'header' => getCatalog('notes'),
-									'name' => 'notes',
-									'value' => '$data["notes"]'
+									'header' => getCatalog('url'),
+									'name' => 'url',
+									'value' => '$data["url"]'
 								),
 							)
 						));
@@ -335,7 +344,7 @@
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
 			<div class="modal-body">
-				<input type="hidden" class="form-control" name="bukubacaanid">
+				<input type="hidden" class="form-control" name="bukubacaandetailid">
 			
 				<div class="row">
 					<div class="col-md-4">
@@ -344,7 +353,7 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="hari">
 					</div>
-				</div>
+				</div><br>
 				<div class="row">
 					<div class="col-md-4">
 						<label for="menuharian">Menu Harian</label>
@@ -352,7 +361,7 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="menuharian">
 					</div>
-				</div>
+				</div><br>
 				<div class="row">
 					<div class="col-md-4">
 						<label for="url">Url</label>
@@ -360,7 +369,7 @@
 					<div class="col-md-8">
 						<input type="text" class="form-control" name="url">
 					</div>
-				</div>
+				</div><br>
 			<div class="modal-footer">
 				<button type="submit" class="btn btn-success" onclick="savedatamenuharian()"><?php echo getCatalog('save') ?></button>
         <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo getCatalog('close') ?></button>
